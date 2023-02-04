@@ -1,0 +1,24 @@
+{% extends 'compay/base.html' %}
+
+{% block content %}
+<div class="main">
+
+	<div class="title">
+		<h2>{{ title }} {{ ap.name }}</h2>
+	</div>
+
+	<div class="submenu">
+		{% for s in submenu %}
+				<a href="{% url s.url_name s.app_selected %}" class="submenu_link">{{s.title}}</a> |
+		{% endfor %}
+	</div>
+
+	<div class="window">
+		{% for item in items %}
+			<h3><a href="{% url 'item' item.app_id item.id %}" class="links">{{ item }}</a></h3>
+		{% endfor %}
+	</div>
+</div>
+
+{% endblock %}
+

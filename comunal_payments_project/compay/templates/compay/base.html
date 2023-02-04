@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+{% load static %}
+<head>
+	<title>{{title}}</title>
+	<link type="text/css" href="{% static 'compay/css/styles.css' %}" rel="stylesheet" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<!--<link rel="shortcut icon" href="{% static 'women/images/main.ico' %}" type="image/x-icon"/>-->
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+{% block mainmenu %}
+		<div class="menu">
+
+			{% for m in menu %}
+
+					<a href="{% url m.url_name %}" class="menu_link">{{m.title}}</a>
+
+			{% endfor %}
+
+
+		</div>
+{% endblock mainmenu %}
+
+{% block msg %}
+	<div class="alert">
+	{% for msg in msgs %}
+
+			<p>{{ msg.key }}: {{ msg.text }}</p>
+
+	{% endfor %}
+	</div>
+{% endblock msg %}
+
+
+<div class="content">
+{% block content %}
+{% endblock %}
+</div>
+
+
+</body>
+</html>

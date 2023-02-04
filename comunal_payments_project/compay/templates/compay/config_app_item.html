@@ -1,0 +1,17 @@
+{% extends 'compay/base.html' %}
+
+{% block content %}
+
+<h2>{{ title }}</h2>
+
+    <div>
+    <h4>Определите конфигурацию для {{ item }}</h4>
+	<form action="#" method='POST'>
+		{% csrf_token %}
+        {{ form.as_p }}
+        <br>
+        <button type="submit">Сохранить</button>
+    </form>
+    </div>
+
+{% endblock %}

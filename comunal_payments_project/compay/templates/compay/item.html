@@ -1,0 +1,14 @@
+{% extends 'compay/base.html' %}
+
+{% block content %}
+
+<h2>{{ item }}:</h2>
+
+<div>
+	{% for s in submenu %}
+			<a href="{% url s.url_name item.app_id item.pk %}">{{s.title}}</a> |
+	{% endfor %}
+</div>
+
+{% endblock %}
+

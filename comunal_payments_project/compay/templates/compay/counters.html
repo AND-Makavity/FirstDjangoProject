@@ -1,0 +1,20 @@
+{% extends 'compay/base.html' %}
+
+{% block content %}
+<div class="main">
+    <div class="title">
+        <h2>{{ title }}<a  href="{% url 'app' ap.id %}" class="links">{{ ap }}</a></h2>
+    </div>
+
+    <div class="window">
+        <h3>{{ obj }}</h3>
+
+            {% for counter in counter_list %}
+
+        <h3 class="text">{{ counter }}:{{ counter.value }}</h3>
+        <h5 class="date">{{ counter.created }}</h5>
+
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

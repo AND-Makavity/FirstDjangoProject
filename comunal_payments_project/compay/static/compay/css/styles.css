@@ -1,0 +1,90 @@
+html, body {
+    background-color: lightgrey;
+}
+
+.content {
+    padding: 25px;
+}
+
+.title {
+    font-family: 'Arial';
+    color: #3b386f;
+    background-color: grey;
+    padding: 10px 30px 5px 30px;
+    text-shadow: 1px 1px darkgrey;
+}
+
+.alert {
+    color: red;
+    padding-left: 25px;
+}
+
+.menu {
+    background-color: grey;
+    font-size:18px;
+    padding: 20px;
+}
+
+.menu_link {
+    color: white;
+    text-decoration: none;
+    text-shadow: 1px 1px #292222;
+    padding: 20px 30px;
+}
+
+.menu_link:hover {
+    background-color: darkgrey;
+}
+
+.submenu {
+    background-color: grey;
+    font-size:15px;
+    padding: 5px;
+    border: solid 1px black;
+}
+
+.submenu_link {
+    color: #292a6f;
+    text-decoration: none;
+    padding: 5px 5px;
+}
+
+.submenu_link:hover {
+    background-color: darkgrey;
+}
+
+.links {
+    text-decoration: none;
+    color: #224b8c;
+    transition: font-size 0.2s;
+}
+
+.links:hover {
+    font-size: 18.9px;
+    color: #163a72;
+    text-shadow: 0px 1px black;
+}
+
+.main {
+    background-color: #f3f0f0;
+    box-shadow: 5px 5px 5px #3b386f;
+}
+
+.window {
+    padding: 20px 40px;
+
+}
+
+.form {
+    padding: 40px 40px;
+}
+
+.text {
+    color: #08306f;
+    margin-bottom: 5px;
+}
+
+.date {
+    color: grey;
+    margin: 0px;
+}

@@ -618,7 +618,7 @@ def check_and_calculation(app_selected, month_selected):
                         if ok:
                             if tarif.el_counter_discrete == '':
                                 sum = tarif.value * (counter.value - counter.previous)
-                                sum_str = '('+str(counter.value)+' - '+str(counter.previous)+') *'+str(tarif.value)+' = '+str(sum)
+                                sum_str = '('+str(counter.value)+' - '+str(counter.previous)+') * '+str(tarif.value)+' = '+str(sum)
                                 try:
                                     topay = ToPay.objects.filter(item=item, month=month_selected).first()
                                     topay.value = sum

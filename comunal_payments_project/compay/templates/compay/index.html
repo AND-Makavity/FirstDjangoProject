@@ -3,17 +3,20 @@
 {% block content %}
 <div class="main">
     <div class="title">
-        <h2>{{ title }}</h2>
+        {{ title }}
     </div>
 
-    <div class="window">
-        <h3>{{ obj }}</h3>
+    <h3 class="obj">{{ obj }}</h3>
 
-            {% for app in apps %}
+    <div class="window">
+
+    <div>
+        {% for app in apps %}
 
         <h3><a href="{% url 'app' app.pk %}" class="links">{{ app }}</a></h3>
 
         {% endfor %}
+    </div>
     </div>
 </div>
 {% endblock %}

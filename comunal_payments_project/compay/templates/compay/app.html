@@ -4,7 +4,7 @@
 <div class="main">
 
 	<div class="title">
-		<h2>{{ title }} {{ ap.name }}</h2>
+		{{ title }} {{ ap.name }}
 	</div>
 
 	<div class="submenu">
@@ -13,10 +13,36 @@
 		{% endfor %}
 	</div>
 
+	<h3 class="obj"></h3>
+
 	<div class="window">
+		<div class="block">
 		{% for item in items %}
 			<h3><a href="{% url 'item' item.app_id item.id %}" class="links">{{ item }}</a></h3>
 		{% endfor %}
+		</div>
+		<div class="wrapper">
+			<a href="?count=yes" class="big_btn" method="get">
+				<h2 class="text">Расчёт</h2>
+			</a>
+
+			<h3 class="text c">Месяц: {{ date|date:'F' }} </h3>
+			<h3 class="text c">К оплате: {{ summary }} р.</h3>
+			<h3 class="text c">Оплачено: {{ 3000 }} р.</h3>
+			<h3 class="text c">Долг: {{ 880 }} р.</h3><br>
+			<a href="{% url 'topay' ap.pk %}" class="submenu_link">Детальный отчет</a>
+		</div>
+
+
+
+		<div class="block">
+			{% for info in info_list %}
+            <h3 class="text c">{{ info }}</h3>
+            <h4 class="text c">{{ info.item_user_number }}</h4>
+            <h4 class="text c">{{ info.item_comment }}</h4>
+            <br>
+        	{% endfor %}
+		</div>
 	</div>
 </div>
 

@@ -1,0 +1,38 @@
+{% extends 'compay/base.html' %}
+
+{% block content %}
+<div class="main">
+    <div class="title">
+        {{ title }}<a href="{% url 'tarifs' item.app_id %}" class="links">{{ item }}</a>
+    </div>
+
+    <h3 class="obj">{{ obj }}</h3>
+
+    <div class="window">
+        <div class="">
+        {% if form_list %}
+
+                <form action="{% url 'tarif' app_selected item_selected %} " method='POST'>
+                    {% csrf_token %}
+                        {% for form in form_list %}
+                            <p>{{ form }}</p>
+                        {% endfor %}
+                    <br>
+                    <button type="submit">Сохранить</button>
+                    <br><br>
+                </form>
+
+        {% endif %}
+
+        {% for tarif in tarif_list %}
+
+            <h3 class="text">{{ tarif }} {{ tarif.get_el_counter_discrete_display }}: {{ tarif.value }}</h3>
+            <h5 class="date">{{ tarif.created }}</h5>
+
+        {% endfor %}
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}

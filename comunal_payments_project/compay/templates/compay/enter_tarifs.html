@@ -9,7 +9,7 @@
 	<h3 class="obj"></h3>
 	<div class="window">
 		<div class="form">
-			<form action="{% url 'enter_counters' app_selected %} " method='POST'>
+			<form action="{% url 'enter_tarifs' app_selected %} " method='POST'>
 				{% csrf_token %}
 				{% for form in form_list %}
 					<p>{{ form }}</p>

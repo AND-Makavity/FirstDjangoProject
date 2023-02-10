@@ -11,19 +11,16 @@
                 <a href="{% url s.url_name item.app_id item.pk %}" class="submenu_link">{{s.title}}</a> |
         {% endfor %}
     </div>
-
-    <h3 class="obj">{{ obj }}</h3>
-
+	<h3 class="obj"></h3>
     <div class="window">
-
-        <div>
-        {% for counter in counter_list %}
-            <h3 class="text"><a  href="{% url 'counter' app_selected counter.item_id %}" class="links">{{ counter }}:</a>
-                {{ counter.value }}</h3>
-            <h5 class="date">{{ counter.created }}</h5>
-        {% endfor %}
+		<div class="form">
+			<form action="{% url 'enter_info' app_selected item.id %} " method='POST'>
+				{% csrf_token %}
+                {{ form.as_p }}
+                <br><br>
+				<button type="submit">Сохранить</button>
+			</form>
         </div>
     </div>
 </div>
 {% endblock %}
-

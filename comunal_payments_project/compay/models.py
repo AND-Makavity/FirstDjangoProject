@@ -5,12 +5,18 @@ from django.db import models
 
 class Appartment(models.Model):
     NAME = 'Объекты'
-    name = models.CharField(max_length=50, unique=True , blank=False, verbose_name="Название объекта")
+    CT = [('counter', 'Счетчик'), ('tarif', 'Тариф')]
+    name = models.CharField(max_length=50, unique=True, blank=False, verbose_name="Название объекта")
     adress = models.CharField(max_length=100, blank=True, verbose_name="Адрес объекта")
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     electricity = models.BooleanField(default=False, verbose_name="Электричество")
+    el_is_counter = models.CharField(choices=CT, max_length=50, default='tarif', blank=False, verbose_name="Расчет по")
+    el_counter_discrete = models.BooleanField(default=False, verbose_name="Тариф зависит от потребления (Да/Нет)")
+    el_night = models.BooleanField(default=False, verbose_name="Счетчик день-ночь (Да/Нет)")
     water = models.BooleanField(default=False, verbose_name="Вода")
+    wat_is_counter = models.CharField(choices=CT, max_length=50, default='tarif', blank=False, verbose_name="Расчет по")
     gas = models.BooleanField(default=False, verbose_name="Газ")
+    gas_is_counter = models.CharField(choices=CT, max_length=50, default='tarif', blank=False, verbose_name="Расчет по")
     kv = models.BooleanField(default=False, verbose_name="Квартплата")
     tbo = models.BooleanField(default=False, verbose_name="ТБО")
     domofon = models.BooleanField(default=False, verbose_name="Домофон")
@@ -29,76 +35,67 @@ class Appartment(models.Model):
 class Item(models.Model):
     LST = [('electricity', 'Электричество'), ('water', 'Вода'), ('gas', 'Газ'), ('kv', 'Квартплата'),
            ('tbo', 'ТБО'), ('domofon', 'Домофон'), ('inet', 'Интернет'), ('other', 'Другой вид оплаты')]
-    CT = [('counter', 'Счетчик'), ('tarif', 'Тариф')]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.is_counter == 'tarif':
-            self.day_night = False
-            self.discrete_tarif = False
+    CT = [('counter', 'Счетчик'), ('tarif', 'Тариф'), ('day', 'Счетчик День'),
+          ('night', 'Счетчик Ночь'), ('total', 'Итого')]
 
     item_name = models.CharField(choices=LST, max_length=50, blank=False, verbose_name="Предмет расчета")
-    is_counter = models.CharField(choices=CT, max_length=50, default='tarif', blank=False, verbose_name="Расчет по")
-    day_night = models.BooleanField(default=False, verbose_name="Счетчик день-ночь (Да/Нет)")
-    discrete_tarif = models.BooleanField(default=False, verbose_name="Тариф зависит от потребления (Да/Нет)")
+    is_counter = models.CharField(choices=CT, max_length=50, default='tarif', blank=False, verbose_name="Расчет")
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     app = models.ForeignKey('Appartment', on_delete=models.CASCADE, verbose_name="Объект")
 
     class Meta:
         verbose_name = 'Конфигурация для расчета'
         verbose_name_plural = 'Конфигурации для расчета'
-        ordering = ['item_name']
+        ordering = ['id']
 
     def __str__(self):
         for k, v in self.LST:
             if k == self.item_name:
                 name = v
-        return str(self.app) + ' - ' + name
+        return str(self.app) + ' - ' + name + " (" + str(self.get_is_counter_display()) + ')'
 
 
 class Tarif(models.Model):
     NAME = 'Тариф '
-    TYPE = [('flat', 'Однотарифный'), ('day', 'День'), ('night', 'Ночь'), ('discrete1', 'Тариф1'),
+    TYPE = [('counter', 'Счетчик'), ('day', 'День'), ('night', 'Ночь'), ('tarif', 'Тариф'),
             ('discrete2', 'Тариф2'), ('discrete3', 'Тариф3')]
+    DISCR = [('0-150', '(0...150)'), ('150-450', '(150..450)'), ('450+', '(450 и выше)'), ('', '')]
 
-    value = models.FloatField(verbose_name='Значение')
+    value = models.FloatField(verbose_name='Тариф ', help_text='')
     type = models.CharField(choices=TYPE, default='flat', max_length=15, blank=False, verbose_name="Тип тарифа")
-    active = models.BooleanField(default=True, verbose_name="Действующий тариф")
+    el_counter_discrete = models.CharField(choices=DISCR, default='', max_length=12,
+                                           blank=False, verbose_name="Зависит от потребления")
+    from_value = models.PositiveSmallIntegerField(blank=True, default=0, verbose_name='От')
+    to_value = models.PositiveSmallIntegerField(blank=True, default=1000000, verbose_name='До')
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
 
     def __str__(self):
-        return self.NAME + ' ' + str(self.item) + ' ' + str(self.type)
+        return self.NAME + ' ' + str(self.item)
 
     class Meta:
         verbose_name = 'Тариф для расчета'
         verbose_name_plural = 'Тарифы для расчета'
-        ordering = ['active']
+        ordering = ['-created']
 
-
-class DiscreteConfiguration(models.Model):
-    NAME = 'Конфигурация дискретного тарифа '
-    frm = models.PositiveSmallIntegerField(verbose_name='От')
-    to = models.PositiveSmallIntegerField(verbose_name='До')
-    created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-    tarif = models.ForeignKey('Tarif', on_delete=models.CASCADE, verbose_name="Тариф")
-
-    def __str__(self):
-        return self.NAME + ' ' + str(self.tarif)
-
-    class Meta:
-        verbose_name = 'Дискретный тариф для расчета'
-        verbose_name_plural = 'Дискретные тарифы для расчета'
-        ordering = ['created']
+    @classmethod
+    def create(cls, type, item, value=0, from_value=0, to_value=1000000, el_counter_discrete=''):
+        tarif = cls(type=type, item=item, value=value, from_value=from_value, to_value=to_value,
+                    el_counter_discrete=el_counter_discrete)
+        return tarif
 
 
 class Info(models.Model):
-    item_provider = models.CharField(max_length=50, blank=False, verbose_name="Название организации")
+    LST = [('electricity', 'Электричество'), ('water', 'Вода'), ('gas', 'Газ'), ('kv', 'Квартплата'),
+           ('tbo', 'ТБО'), ('domofon', 'Домофон'), ('inet', 'Интернет'), ('other', 'Другой вид оплаты')]
+
+    item = models.CharField(choices=LST, max_length=20, blank=False, verbose_name="Предмет")
+    item_provider = models.CharField(max_length=50, blank=True, verbose_name="Название организации")
     item_user_number = models.CharField(max_length=50, blank=True, verbose_name="Лицевой счет")
     item_comment = models.TextField(blank=True, verbose_name="Дополнительная информация")
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     app = models.ForeignKey('Appartment', on_delete=models.PROTECT, verbose_name="Объект")
-    item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
+
 
     def __str__(self):
         return str(self.item_provider) + ' ' + str(self.app)
@@ -112,30 +109,27 @@ class Info(models.Model):
 class Counter(models.Model):
     NAME = 'Показания счетчика'
     LST = [('electricity', 'Электричество'), ('water', 'Вода'), ('gas', 'Газ')]
-    TYPE = [('flat', 'Однотарифный'), ('day', 'День'), ('night', 'Ночь')]
+    TYPE = [('counter', 'Однотарифный'), ('day', 'День'), ('night', 'Ночь')]
 
     type = models.CharField(choices=TYPE, default='flat', max_length=15, blank=False, verbose_name="Тип счетчика")
     value = models.PositiveIntegerField(blank=False, verbose_name='Показания')
     previous = models.PositiveIntegerField(blank=True, default=0, verbose_name='Предыдущие показания')
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата ввода показаний")
+    updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
     item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
 
     class Meta:
         verbose_name = 'Показания счетчика'
         verbose_name_plural = 'Показания счетчиков'
-        ordering = ['created']
+        ordering = ['-created']
 
     def __str__(self):
-        # for k, v in self.TYPE:
-        #     if k == self.type:
-        #         type_str = v
-        return str(self.item) + ' ' + str(self.get_type_display())
+        return str(self.item)
 
     @classmethod
-    def create(cls, type, value, item):
-        counter = cls(type=type, item=item, value=0)
+    def create(cls, type, item, value=0, previous=0):
+        counter = cls(type=type, item=item, value=value, previous=previous)
         return counter
-
 
 
 MONTHES = [('1', 'Январь'), ('2', 'Февраль'), ('3', 'Март'),
@@ -147,10 +141,11 @@ MONTHES = [('1', 'Январь'), ('2', 'Февраль'), ('3', 'Март'),
 class ToPay(models.Model):
     NAME = 'Расчет для оплаты'
 
-    value = models.FloatField(verbose_name=NAME)
+    value = models.FloatField(default=0, verbose_name=NAME)
     month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
+    calculation = models.CharField(max_length=250, blank=True, verbose_name='Расчёт')
     item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
 
     class Meta:
@@ -159,13 +154,13 @@ class ToPay(models.Model):
         ordering = ['created']
 
     def __str__(self):
-        return self.NAME + ' ' + str(self.item) + ' ' + str(self.month)
+        return self.NAME + ' ' + str(self.item) + ' ' + str(self.get_month_display())
 
 
 class Payed(models.Model):
     NAME = 'Оплачено'
 
-    value = models.FloatField(verbose_name=NAME)
+    value = models.FloatField(default=0, verbose_name=NAME)
     month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
@@ -183,7 +178,7 @@ class Payed(models.Model):
 class Debts(models.Model):
     NAME = 'Долг'
 
-    value = models.FloatField(verbose_name=NAME)
+    value = models.FloatField(default=0, verbose_name=NAME)
     month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
@@ -191,7 +186,7 @@ class Debts(models.Model):
 
     class Meta:
         verbose_name = 'Долг'
-        verbose_name_plural = 'Долги'
+        verbose_name_plural = 'Долг'
         ordering = ['created']
 
     def __str__(self):

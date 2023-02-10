@@ -1,0 +1,23 @@
+{% extends 'compay/base.html' %}
+
+{% block content %}
+<div class="main">
+	<div class="title">
+        {{ title }}<a  href="{% url 'app' app_selected %}" class="links">{{ ap }}</a>
+    </div>
+
+    <h3 class="obj">{{ obj }}</h3>
+
+    <div class="window">
+
+        <div>
+        {% for info in info_list %}
+            <h3 class="text c">{{ info }}</h3>
+            <h4 class="text c">л/с: {{ info.item_user_number }}</h4>
+            <h4 class="text c">{{ info.item_comment }}</h4>
+            <br>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

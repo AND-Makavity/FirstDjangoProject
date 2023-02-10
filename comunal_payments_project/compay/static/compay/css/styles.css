@@ -1,5 +1,6 @@
 html, body {
     background-color: lightgrey;
+    margin: 0;
 }
 
 .content {
@@ -8,10 +9,13 @@ html, body {
 
 .title {
     font-family: 'Arial';
+    font-size: 18.5px;
     color: #3b386f;
     background-color: grey;
-    padding: 10px 30px 5px 30px;
+    padding: 30px 30px 25px 30px;
+    margin: 0px;
     text-shadow: 1px 1px darkgrey;
+    font-weight: bold;
 }
 
 .alert {
@@ -20,9 +24,11 @@ html, body {
 }
 
 .menu {
+    display: flex;
+    justify-content: space-between;
     background-color: grey;
     font-size:18px;
-    padding: 20px;
+    padding: 0px;
 }
 
 .menu_link {
@@ -37,16 +43,20 @@ html, body {
 }
 
 .submenu {
+display: flex;
     background-color: grey;
     font-size:15px;
-    padding: 5px;
+    padding: 0px;
     border: solid 1px black;
 }
 
 .submenu_link {
+    display: block;
+    min-width: 100px;
+    margin: 0 5px;
     color: #292a6f;
     text-decoration: none;
-    padding: 5px 5px;
+    text-align: center;
 }
 
 .submenu_link:hover {
@@ -71,20 +81,73 @@ html, body {
 }
 
 .window {
-    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0px 40px 20px 40px;
+    }
 
+.obj {
+    margin: 0;
+    margin: 20px 0px 0px 40px;
+    color: #224b8c;
 }
 
 .form {
     padding: 40px 40px;
 }
 
-.text {
+.wrapper {
+    padding: 10px 40px;
+}
+
+.big_btn {
+    display: block;
+    color: #224b8c;
+    text-decoration: None;
+    padding: 35px 35px;
+    justify-content: center;
+    text-align: center;
+    margin-bottom: 30px;
+    border: 1px solid #e2dddd;
+    border-radius: 15% 15%;
+    box-shadow: 3px 3px 3px grey;
+    transition: box-shadow 0.2s linear;
+    transition: transform 0.1s linear;
+}
+
+.big_btn:hover {
+    border: 1px solid grey;
+    box-shadow: 5px 5px 5px grey;
+
     color: #08306f;
-    margin-bottom: 5px;
+}
+
+.big_btn:active {
+    border: 1px solid grey;
+    transform: translate(1px, 1px);
+    box-shadow: 5px 5px 5px red;
+    color: red;
+}
+
+.form-input {
+    width: 100px;
+}
+
+.block {
+    max-width: 400px;
+    min-width: 250px;
+}
+
+.text {
+    margin: 5px;
+}
+
+.c {
+    color: #08306f;
 }
 
 .date {
     color: grey;
     margin: 0px;
+    padding-bottom: 12px;
 }

@@ -1,0 +1,35 @@
+{% extends 'compay/base.html' %}
+
+{% block content %}
+<div class="main">
+    <div class="title">
+        {{ title }}<a href="{% url 'app' item.app_id %}" class="links">{{ item }}</a>
+    </div>
+
+    <h3 class="obj">{{ obj }}</h3>
+
+    <div class="window">
+        <div class="">
+        {% if form %}
+
+                <form action="{% url 'counter' app_selected item_selected %} " method='POST'>
+                    {% csrf_token %}
+                        <p>{{ form }}</p>
+                    <br>
+                    <button type="submit">Сохранить</button>
+                    <br><br>
+                </form>
+        {% endif %}
+
+        {% for counter in counter_list %}
+
+            <h3 class="text">{{ counter }}:{{ counter.value }}</h3>
+            <h5 class="date">{{ counter.created }}</h5>
+
+        {% endfor %}
+        </div>
+    </div>
+
+
+</div>
+{% endblock %}

@@ -1,10 +1,12 @@
 {% extends 'compay/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="main">
 
 	<div class="title">
-		{{ title }} {{ ap.name }}
+		<div>{{ title }} {{ ap.name }}</div>
+		<div>{{ date }} <a href="{% url 'home' %}"><img class="icon_img" src="{% static 'compay/images/docs.png' %}" alt="No picture"></a></div>
 	</div>
 
 	<div class="submenu">

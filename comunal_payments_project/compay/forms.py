@@ -1,3 +1,5 @@
+import datetime
+
 from django import forms
 from .models import *
 
@@ -54,3 +56,11 @@ class InfoForm(forms.ModelForm):
         model = Info
         fields = '__all__'
         exclude = ('created', 'app', 'item')
+
+
+class MonthForm(forms.Form):
+    MONTHES = {'1': 'Январь', '2': 'Февраль', '3': 'Март', '4': 'Апрель', '5': 'Май', '6': 'Июнь',
+               '7': 'Июль', '8': 'Август', '9': 'Сентябрь', '10': 'Октябрь', '11': 'Ноябрь', '12': 'Декабрь'}
+
+    date = forms.DateField(widget=forms.SelectDateWidget(months=MONTHES), label='',
+                           initial=datetime.date.today, )

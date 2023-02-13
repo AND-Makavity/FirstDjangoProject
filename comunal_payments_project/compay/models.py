@@ -191,3 +191,4 @@ class Debts(models.Model):
 
     def __str__(self):
         return self.NAME + ' ' + str(self.item) + ' ' + str(self.month)
+

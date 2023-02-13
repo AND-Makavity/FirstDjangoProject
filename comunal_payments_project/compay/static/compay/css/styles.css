@@ -8,6 +8,8 @@ html, body {
 }
 
 .title {
+    display: flex;
+    justify-content: space-between;
     font-family: 'Arial';
     font-size: 18.5px;
     color: #3b386f;
@@ -16,6 +18,11 @@ html, body {
     margin: 0px;
     text-shadow: 1px 1px darkgrey;
     font-weight: bold;
+}
+
+.title_div {
+    display: inline-block;
+    vertical-align: middle;
 }
 
 .alert {
@@ -43,11 +50,15 @@ html, body {
 }
 
 .submenu {
-display: flex;
+    display: flex;
     background-color: grey;
     font-size:15px;
     padding: 0px;
     border: solid 1px black;
+}
+
+.end {
+    justify-content: end;
 }
 
 .submenu_link {
@@ -91,6 +102,13 @@ display: flex;
     margin: 20px 0px 0px 40px;
     color: #224b8c;
 }
+
+.icon_img {
+    margin: 5px 5px 0px 5px;
+    height: 18px;
+    width: 18px;
+}
+
 
 .form {
     padding: 40px 40px;

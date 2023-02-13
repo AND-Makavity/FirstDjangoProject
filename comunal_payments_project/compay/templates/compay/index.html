@@ -3,20 +3,28 @@
 {% block content %}
 <div class="main">
     <div class="title">
-        {{ title }}
+        <div class="title_div">{{ title }}</div>
+        <div>{{ date }}</div>
+    </div>
+
+    <div class="submenu end">
+        <form action="{% url 'home' %}" method="post">
+            {% csrf_token %}
+            {{ form }}
+            <button type="submit">Изменить</button>
+        </form>
     </div>
 
     <h3 class="obj">{{ obj }}</h3>
 
     <div class="window">
+        <div>
+            {% for app in apps %}
 
-    <div>
-        {% for app in apps %}
+            <h3><a href="{% url 'app' app.pk %}" class="links">{{ app }}</a></h3>
 
-        <h3><a href="{% url 'app' app.pk %}" class="links">{{ app }}</a></h3>
-
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}

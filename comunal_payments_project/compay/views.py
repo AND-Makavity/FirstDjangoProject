@@ -12,26 +12,31 @@ month = date.month
 
 # DONE
 def index(request):
-    global msgs
+    global msgs, date, month
     clean_msgs()
+
+    if request.method == "POST":
+        form = MonthForm(request.POST)
+        if form.is_valid():
+            date = form.cleaned_data['date']
+    else:
+        form = MonthForm()
 
     apps = Appartment.objects.all()
     if apps.count() > 0:
         obj = ''
     else:
-        obj = 'Пока тут нет объектов. Добавьте свой'
-    context = {'title': 'Главная страница', 'menu': menu, 'msgs': msgs, 'apps': apps, 'obj': obj}
+        obj = 'Пока тут нет объектов. Добавьте новый'
+    context = {'title': 'Главная страница', 'menu': menu, 'msgs': msgs, 'apps': apps,
+               'obj': obj, 'form': form, 'date': date}
     return render(request, 'compay/index.html', context)
 
 
 # DONE
 def app(request, app_selected):
-    global msgs, month
+    global msgs, month, date
     clean_msgs()
     create_items_for_app(app_selected)
-
-    date = datetime.date.today()
-    month = date.month
 
     if request.method == 'GET':
         try:
@@ -39,7 +44,7 @@ def app(request, app_selected):
         except:
             c = None
         if c:
-            summary = check_and_calculation(app_selected, month)
+            summary = check_and_calculation(app_selected, date.month)
         else:
             summary = '0'
     else:
@@ -67,7 +72,7 @@ def app(request, app_selected):
 
 # DONE
 def add_app(request):
-    global msgs
+    global msgs, date
     clean_msgs()
 
     if request.method == 'POST':
@@ -79,16 +84,17 @@ def add_app(request):
         else:
             msgs.append(dict(key='Error', text='Ошибка ввода данных', description='Error'))
             form = AppartmentForm()
-            context = {'title': 'Создайте новый объект:', 'menu': menu, 'msgs': msgs, 'form': form}
+            context = {'title': 'Создайте новый объект:', 'menu': menu, 'msgs': msgs, 'form': form, 'date': date}
             return render(request, 'compay/add_app.html', context)
     else:
         form = AppartmentForm()
-        context = {'title': 'Создайте новый объект:', 'menu': menu, 'msgs': msgs, 'form': form}
+        context = {'title': 'Создайте новый объект:', 'menu': menu, 'msgs': msgs, 'form': form, 'date': date}
         return render(request, 'compay/add_app.html', context)
 
 
 # HERE !!!
 def item(request, app_selected, item_selected):
+    global msgs, date
     clean_msgs()
     item = Item.objects.get(id=item_selected)
     counters = Counter.objects.filter(item=item_selected).order_by('-created')[:5]
@@ -97,7 +103,8 @@ def item(request, app_selected, item_selected):
 
     if not counters:
         obj = 'Нет записей'
-        submenu = [{"title": "Редактировать инфо", 'url_name': 'enter_info'}]
+        submenu = [{"title": "Ввести показания", 'url_name': 'counter'},
+                   {"title": "Редактировать инфо", 'url_name': 'enter_info'}]
     elif item.is_counter in ['counter', 'day', 'night']:
         obj = ''
         submenu = [{"title": "Ввести показания", 'url_name': 'counter'},
@@ -107,7 +114,7 @@ def item(request, app_selected, item_selected):
         submenu = [{"title": "Редактировать инфо", 'url_name': 'enter_info'}]
 
     context = {'title': 'Показания для: ', 'menu': menu, 'msgs': msgs, 'item': item, 'obj': obj,
-               'app_selected': app_selected, 'submenu': submenu, 'counter_list': counters}
+               'app_selected': app_selected, 'submenu': submenu, 'counter_list': counters, 'date': date}
     return render(request, 'compay/item.html', context)
 
 
@@ -117,6 +124,7 @@ def calculation(request, app_selected, month_selected):
 
 # DONE
 def info(request, app_selected):
+    global msgs, date
     clean_msgs()
 
     ap = Appartment.objects.get(id=app_selected)
@@ -129,12 +137,13 @@ def info(request, app_selected):
         obj = ''
 
     context = {'title': 'Информация для расчетов по: ', 'menu': menu, 'msgs': msgs, 'ap': ap, 'obj': obj,
-               'app_selected': app_selected, 'info_list': info_list}
+               'app_selected': app_selected, 'info_list': info_list, 'date': date}
     return render(request, 'compay/info.html', context)
 
 
 # DONE
 def enter_info(request, app_selected, item_selected):
+    global date
     clean_msgs()
 
     ap = Appartment.objects.get(id=app_selected)
@@ -161,13 +170,13 @@ def enter_info(request, app_selected, item_selected):
         form = InfoForm(instance=info)
 
     context = {'title': 'Заполните информацию для: ', 'menu': menu, 'msgs': msgs, 'item': item,
-               'app_selected': app_selected, 'submenu': None, 'form': form}
+               'app_selected': app_selected, 'submenu': None, 'form': form, 'date': date}
     return render(request, 'compay/enter_info.html', context)
 
 
 # DONE
 def config_app(request, app_selected):
-    global msgs
+    global msgs, date
     clean_msgs()
     create_items_for_app(app_selected)
 
@@ -187,13 +196,13 @@ def config_app(request, app_selected):
     else:
         form = AppartmentEditForm(instance=ap)
         context = {'title': 'Проверьте конфигурацию объекта: ', 'menu': menu, 'msgs': msgs, 'ap': ap, 'form': form,
-                   'app_selected': app_selected}
+                   'app_selected': app_selected, 'date': date}
         return render(request, 'compay/config_app.html', context)
 
 
 # DONE
 def enter_tarifs(request, app_selected):
-    global msgs
+    global msgs, date
     clean_msgs('config_item')
     clean_msgs('Calculation-Tarif')
 
@@ -276,13 +285,13 @@ def enter_tarifs(request, app_selected):
             form_list.append(form)
 
     context = {'title': 'Введите значения тарифов: ', 'menu': menu, 'msgs': msgs,
-               'ap': ap, 'app_selected': app_selected, 'form_list': form_list}
+               'ap': ap, 'app_selected': app_selected, 'form_list': form_list, 'date': date}
     return render(request, 'compay/enter_tarifs.html', context)
 
 
 # Убрать submenu
 def tarifs(request, app_selected):
-    global msgs, LST
+    global msgs, LST, date
     clean_msgs()
     tarif_list = []
 
@@ -299,13 +308,13 @@ def tarifs(request, app_selected):
             tarif_list.append(tarif)
 
     context = {'title': 'Тарифы для: ', 'menu': menu, 'submenu': submenu, 'msgs': msgs,
-               'ap': ap, 'app_selected': app_selected, 'tarif_list': tarif_list}
+               'ap': ap, 'app_selected': app_selected, 'tarif_list': tarif_list, 'date': date}
     return render(request, 'compay/tarifs.html', context)
 
 
 # DONE
 def tarif(request, app_selected, item_selected):
-    global msgs, LST
+    global msgs, LST, date
     clean_msgs()
     tarif2 = None
 
@@ -364,13 +373,13 @@ def tarif(request, app_selected, item_selected):
 
     context = {'title': 'Тариф для: ', 'menu': menu, 'msgs': msgs, 'obj': obj,
                'item': item, 'app_selected': app_selected, 'item_selected': item_selected,
-               'tarif_list': tarifs, 'form_list': form_list}
+               'tarif_list': tarifs, 'form_list': form_list, 'date': date}
     return render(request, 'compay/tarif.html', context)
 
 
 # DONE
 def enter_counters(request, app_selected):
-    global msgs, LST
+    global msgs, LST, month, date
     clean_msgs('config_item')
     clean_msgs('Calculation-Counter')
 
@@ -386,7 +395,7 @@ def enter_counters(request, app_selected):
                 for it in items:
                     if it.is_counter in TYPES:
                         counter = Counter.objects.filter(item=it, type=it.is_counter).order_by('-created').first()
-                        if not counter:
+                        if not counter or counter.created.month != month:
                             counter = Counter.create(type=it.is_counter, value=0, item=it)
                         counter_list.append(counter)
 
@@ -418,13 +427,12 @@ def enter_counters(request, app_selected):
             form_list.append(form)
 
     context = {'title': 'Введите показания счетчиков: ', 'menu': menu, 'msgs': msgs,
-               'ap': ap, 'app_selected': app_selected, 'form_list': form_list}
+               'ap': ap, 'app_selected': app_selected, 'form_list': form_list, 'date': date}
     return render(request, 'compay/enter_counters.html', context)
 
 
-# Убрать submenu
 def counters(request, app_selected):
-    global msgs, LST
+    global msgs, LST, date
     clean_msgs()
     counter_list = []
 
@@ -447,13 +455,13 @@ def counters(request, app_selected):
             counter_list.append(counter)
 
     context = {'title': 'Показания счетчиков: ', 'menu': menu, 'submenu': submenu, 'msgs': msgs,
-               'ap': ap, 'app_selected': app_selected, 'counter_list': counter_list}
+               'ap': ap, 'app_selected': app_selected, 'counter_list': counter_list, 'date': date}
     return render(request, 'compay/counters.html', context)
 
 
+# ПРОВЕРИТЬ month == month!
 def counter(request, app_selected, item_selected):
-    global msgs, LST
-    TYPES = ['counter', 'day', 'night']
+    global msgs, LST, month, date
     clean_msgs()
 
     item = Item.objects.get(pk=item_selected)
@@ -461,11 +469,14 @@ def counter(request, app_selected, item_selected):
 
     if not counters:
         obj = 'Пока тут нет записей'
+        counter = Counter(item=item, type=item.is_counter)
     else:
         obj = ''
-
-    counter = Counter.create(item=counters[0].item, type=counters[0].type,
-                             value=counters[0].value, previous=counters[0].value)
+        if counters[0].created.month == month:
+            counter = counters[0]
+        else:
+            counter = Counter.create(item=counters[0].item, type=counters[0].type,
+                                 value=counters[0].value, previous=counters[0].value)
 
     if request.method == 'POST':
         form = CounterForm(request.POST, instance=counter)
@@ -480,12 +491,12 @@ def counter(request, app_selected, item_selected):
 
     context = {'title': 'Показания счетчиков: ', 'menu': menu, 'msgs': msgs, 'obj': obj,
                'item': item, 'app_selected': app_selected, 'item_selected': item_selected,
-               'counter_list': counters, 'form': form}
+               'counter_list': counters, 'form': form, 'date': date}
     return render(request, 'compay/counter.html', context)
 
 
 def topay(request, app_selected):
-    global msgs, LST, month
+    global msgs, LST, month, date
     clean_msgs()
     topay_list = []
 
@@ -497,11 +508,14 @@ def topay(request, app_selected):
     items = Item.objects.filter(app_id=app_selected)
 
     for it in items:
-        topay = ToPay.objects.filter(item=it.pk, month=month)[0]
-        topay_list.append(topay)
+        try:
+            topay = ToPay.objects.filter(item=it.pk, month=date.month).first()
+            topay_list.append(topay)
+        except:
+            pass
 
-    context = {'title': 'Расчет для оплаты по: : ', 'menu': menu, 'submenu': submenu, 'msgs': msgs,
-               'ap': ap, 'app_selected': app_selected, 'topay_list': topay_list}
+    context = {'title': 'Расчет для оплаты по: ', 'menu': menu, 'submenu': submenu, 'msgs': msgs,
+               'ap': ap, 'app_selected': app_selected, 'topay_list': topay_list, 'date': date}
     return render(request, 'compay/topay.html', context)
 
 
@@ -583,8 +597,9 @@ def create_items_for_app(app_selected):
                     a.save()
 
 
+# ПРОВЕРИТЬ тариф от месяца!!!
 def check_and_calculation(app_selected, month_selected):
-    global msgs
+    global msgs, month
     lst_template = ['electricity', 'water', 'gas', 'kv', 'tbo', 'domofon', 'inet', 'other']
     lst = []
     summary = 0
@@ -603,7 +618,7 @@ def check_and_calculation(app_selected, month_selected):
         for item in items:
             if item.item_name == el and item.is_counter != 'total':
                 ok = True
-                tarifs = Tarif.objects.filter(item=item.id).order_by('-created')[:3]
+                tarifs = Tarif.objects.filter(item=item.id).exclude(created__month__gt=month).order_by('-created')[:3]
                 tarif = tarifs.first()
                 if not tarif:
                     msg_add(key=item, text='Не задан тариф для расчёта', description='Calculation-Tarif')

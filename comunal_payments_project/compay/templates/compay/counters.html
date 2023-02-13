@@ -3,7 +3,8 @@
 {% block content %}
 <div class="main">
     <div class="title">
-        {{ title }}<a  href="{% url 'app' ap.id %}" class="links">{{ ap }}</a>
+        <div>{{ title }}<a  href="{% url 'app' ap.id %}" class="links">{{ ap }}</a></div>
+        <div>{{ date }}</div>
     </div>
 
     <div  class="submenu">

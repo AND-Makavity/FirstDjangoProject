@@ -24,8 +24,7 @@ class CounterAdmin(admin.ModelAdmin):
 
 
 class TarifAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item', 'type', 'value', 'from_value', 'to_value',
-                    'el_counter_discrete', 'created')
+    list_display = ('id', 'item', 'type', 'value', 'el_counter_discrete', 'created')
     list_display_links = ('id', 'item', )
     search_fields = ('item',)
 
@@ -36,10 +35,11 @@ class InfoAdmin(admin.ModelAdmin):
     search_fields = ('item',)
 
 
-class ToPayAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item', 'value', 'month', 'calculation', 'created', 'updated')
+class PayAdmin(admin.ModelAdmin):
+    list_display = ('id', 'item', 'topay', 'payed', 'debt', 'month', 'calculation', 'created', 'updated')
     list_display_links = ('id', 'item', )
     search_fields = ('item',)
+
 
 
 admin.site.register(Appartment, AppartmentAdmin)
@@ -47,7 +47,6 @@ admin.site.register(Item, ItemAdmin)
 admin.site.register(Tarif, TarifAdmin)
 admin.site.register(Info, InfoAdmin)
 admin.site.register(Counter, CounterAdmin)
-admin.site.register(ToPay, ToPayAdmin)
-admin.site.register(Payed)
-admin.site.register(Debts)
+admin.site.register(Pay, PayAdmin)
+
 

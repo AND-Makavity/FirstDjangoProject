@@ -55,18 +55,17 @@ class Item(models.Model):
         return str(self.app) + ' - ' + name + " (" + str(self.get_is_counter_display()) + ')'
 
 
+# type??? default=flat???
 class Tarif(models.Model):
     NAME = 'Тариф '
     TYPE = [('counter', 'Счетчик'), ('day', 'День'), ('night', 'Ночь'), ('tarif', 'Тариф'),
             ('discrete2', 'Тариф2'), ('discrete3', 'Тариф3')]
-    DISCR = [('0-150', '(0...150)'), ('150-450', '(150..450)'), ('450+', '(450 и выше)'), ('', '')]
+    DISCR = [('0-150', '(0...150)'), ('150-600', '(150..600)'), ('600+', '(600 и выше)'), ('', '')]
 
     value = models.FloatField(verbose_name='Тариф ', help_text='')
     type = models.CharField(choices=TYPE, default='flat', max_length=15, blank=False, verbose_name="Тип тарифа")
     el_counter_discrete = models.CharField(choices=DISCR, default='', max_length=12,
                                            blank=False, verbose_name="Зависит от потребления")
-    from_value = models.PositiveSmallIntegerField(blank=True, default=0, verbose_name='От')
-    to_value = models.PositiveSmallIntegerField(blank=True, default=1000000, verbose_name='До')
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
 
@@ -80,8 +79,7 @@ class Tarif(models.Model):
 
     @classmethod
     def create(cls, type, item, value=0, from_value=0, to_value=1000000, el_counter_discrete=''):
-        tarif = cls(type=type, item=item, value=value, from_value=from_value, to_value=to_value,
-                    el_counter_discrete=el_counter_discrete)
+        tarif = cls(type=type, item=item, value=value, el_counter_discrete=el_counter_discrete)
         return tarif
 
 
@@ -138,10 +136,12 @@ MONTHES = [('1', 'Январь'), ('2', 'Февраль'), ('3', 'Март'),
            ('10', 'Октябрь'), ('11', 'Ноябрь'), ('12', 'Декабрь'), ]
 
 
-class ToPay(models.Model):
-    NAME = 'Расчет для оплаты'
+class Pay(models.Model):
+    NAME = 'Расчет оплаты'
 
-    value = models.FloatField(default=0, verbose_name=NAME)
+    topay = models.FloatField(default=0, verbose_name='К оплате')
+    payed = models.FloatField(default=0, verbose_name='Оплачено')
+    debt = models.FloatField(default=0, verbose_name='Долг')
     month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
@@ -157,38 +157,38 @@ class ToPay(models.Model):
         return self.NAME + ' ' + str(self.item) + ' ' + str(self.get_month_display())
 
 
-class Payed(models.Model):
-    NAME = 'Оплачено'
-
-    value = models.FloatField(default=0, verbose_name=NAME)
-    month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
-    created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-    updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
-    item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
-
-    class Meta:
-        verbose_name = 'Оплата'
-        verbose_name_plural = 'Оплаты'
-        ordering = ['created']
-
-    def __str__(self):
-        return self.NAME + ' ' + str(self.item) + ' ' + str(self.month)
-
-
-class Debts(models.Model):
-    NAME = 'Долг'
-
-    value = models.FloatField(default=0, verbose_name=NAME)
-    month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
-    created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-    updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
-    item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
-
-    class Meta:
-        verbose_name = 'Долг'
-        verbose_name_plural = 'Долг'
-        ordering = ['created']
-
-    def __str__(self):
-        return self.NAME + ' ' + str(self.item) + ' ' + str(self.month)
+# class Payed(models.Model):
+#     NAME = 'Оплачено'
+#
+#     value = models.FloatField(default=0, verbose_name=NAME)
+#     month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
+#     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+#     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
+#     item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
+#
+#     class Meta:
+#         verbose_name = 'Оплата'
+#         verbose_name_plural = 'Оплаты'
+#         ordering = ['created']
+#
+#     def __str__(self):
+#         return self.NAME + ' ' + str(self.item) + ' ' + str(self.month)
+#
+#
+# class Debts(models.Model):
+#     NAME = 'Долг'
+#
+#     value = models.FloatField(default=0, verbose_name=NAME)
+#     month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
+#     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+#     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
+#     item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
+#
+#     class Meta:
+#         verbose_name = 'Долг'
+#         verbose_name_plural = 'Долг'
+#         ordering = ['created']
+#
+#     def __str__(self):
+#         return self.NAME + ' ' + str(self.item) + ' ' + str(self.month)
 

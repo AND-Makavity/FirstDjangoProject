@@ -1,4 +1,3 @@
-import datetime
 
 from django.shortcuts import render, redirect
 
@@ -9,6 +8,7 @@ LST = ['electricity', 'water', 'gas']
 msgs = []
 date = datetime.date.today()
 month = date.month
+
 
 # DONE
 def index(request):
@@ -27,7 +27,7 @@ def index(request):
         obj = ''
     else:
         obj = 'Пока тут нет объектов. Добавьте новый'
-    context = {'title': 'Главная страница', 'menu': menu, 'msgs': msgs, 'apps': apps,
+    context = {'title': 'Приложение для учета комунальных платежей', 'menu': menu, 'msgs': msgs, 'apps': apps,
                'obj': obj, 'form': form, 'date': date}
     return render(request, 'compay/index.html', context)
 
@@ -44,11 +44,18 @@ def app(request, app_selected):
         except:
             c = None
         if c:
-            summary = check_and_calculation(app_selected, date.month)
+            summary, pay_selected = check_and_calculation(app_selected, date.month)
+            payed_total, debt_total = count_payed_and_debts(app_selected, date.month)
         else:
             summary = '0'
+            pay_selected = 0
+            payed_total = '0'
+            debt_total = '0'
     else:
         summary = '0'
+        pay_selected = 0
+        payed_total = '0'
+        debt_total = '0'
 
     items = Item.objects.filter(app_id=app_selected)
     ap = items.first().app
@@ -65,8 +72,8 @@ def app(request, app_selected):
                {"title": "Конфигурация", 'url_name': 'config_app', 'app_selected': app_selected}]  # !!!HERE!!!!
 
     context = {'title': 'Страница объекта: ', 'menu': menu, 'submenu': submenu, 'msgs': msgs, 'date': date,
-               'month': month, 'ap': ap, 'items': items, 'app_selected': app_selected, 'info_list': info_list,
-               'summary': summary}
+               'ap': ap, 'items': items, 'app_selected': app_selected, 'pay_selected': pay_selected,
+               'info_list': info_list, 'summary': summary, 'payed_total': payed_total, 'debt_total': debt_total}
     return render(request, 'compay/app.html', context)
 
 
@@ -224,19 +231,19 @@ def enter_tarifs(request, app_selected):
                                                               ).order_by('-created').first()
                                 if not tarif1:
                                     tarif1 = Tarif.create(type=it.is_counter, el_counter_discrete='0-150', value=0,
-                                                          item=it, from_value=0, to_value=150)
+                                                          item=it)
                                 tarif_list.append(tarif1)
-                                tarif2 = Tarif.objects.filter(item=it, type=it.is_counter, el_counter_discrete='150-450'
+                                tarif2 = Tarif.objects.filter(item=it, type=it.is_counter, el_counter_discrete='150-600'
                                                               ).order_by('-created').first()
                                 if not tarif2:
-                                    tarif2 = Tarif.create(type=it.is_counter, el_counter_discrete='150-450', value=0,
-                                                          item=it, from_value=150, to_value=450)
+                                    tarif2 = Tarif.create(type=it.is_counter, el_counter_discrete='150-600', value=0,
+                                                          item=it)
                                 tarif_list.append(tarif2)
-                                tarif3 = Tarif.objects.filter(item=it, type=it.is_counter, el_counter_discrete='450+'
+                                tarif3 = Tarif.objects.filter(item=it, type=it.is_counter, el_counter_discrete='600+'
                                                               ).order_by('-created').first()
                                 if not tarif3:
-                                    tarif3 = Tarif.create(type=it.is_counter, el_counter_discrete='450+', value=0,
-                                                          item=it, from_value=450, to_value=1000000)
+                                    tarif3 = Tarif.create(type=it.is_counter, el_counter_discrete='600+', value=0,
+                                                          item=it)
                                 tarif_list.append(tarif3)
                             else:
                                 tarif4 = Tarif.objects.filter(item=it, type=it.is_counter, el_counter_discrete=''
@@ -275,12 +282,12 @@ def enter_tarifs(request, app_selected):
             label = ' ' + str(tarif.item) + ': '
             form = TarifForm(instance=tarif, prefix=str(i))
             i += 1
-            if tarif.to_value == 150:
+            if tarif.el_counter_discrete == '0-150':
                 label += '(0..150)'
-            elif tarif.to_value == 450:
-                label += '(150..450)'
-            elif tarif.from_value == 450:
-                label += '(450 и выше)'
+            elif tarif.el_counter_discrete == '150-600':
+                label += '(150..600)'
+            elif tarif.el_counter_discrete == '600+':
+                label += '(600 и выше)'
             form.label_suffix = label
             form_list.append(form)
 
@@ -325,20 +332,16 @@ def tarif(request, app_selected, item_selected):
         obj = 'Пока тут нет записей'
     elif tarifs[0].el_counter_discrete != '':
         tarif3 = Tarif.create(item=tarifs[0].item, type=tarifs[0].type,
-                              value=tarifs[0].value, from_value=tarifs[0].from_value,
-                              to_value=tarifs[0].to_value, el_counter_discrete=tarifs[0].el_counter_discrete)
+                              value=tarifs[0].value, el_counter_discrete=tarifs[0].el_counter_discrete)
         tarif2 = Tarif.create(item=tarifs[1].item, type=tarifs[1].type,
-                              value=tarifs[1].value, from_value=tarifs[1].from_value,
-                              to_value=tarifs[1].to_value, el_counter_discrete=tarifs[1].el_counter_discrete)
+                              value=tarifs[1].value, el_counter_discrete=tarifs[1].el_counter_discrete)
         tarif = Tarif.create(item=tarifs[2].item, type=tarifs[2].type,
-                             value=tarifs[2].value, from_value=tarifs[2].from_value,
-                             to_value=tarifs[2].to_value, el_counter_discrete=tarifs[2].el_counter_discrete)
+                             value=tarifs[2].value, el_counter_discrete=tarifs[2].el_counter_discrete)
         obj = ''
     else:
         obj = ''
         tarif = Tarif.create(item=tarifs[0].item, type=tarifs[0].type,
-                             value=tarifs[0].value, from_value=tarifs[0].from_value,
-                             to_value=tarifs[0].to_value, el_counter_discrete='')
+                             value=tarifs[0].value, el_counter_discrete='')
     form_list = []
     if request.method == 'POST':
         form = TarifForm(request.POST, instance=tarif, prefix=1)
@@ -395,7 +398,7 @@ def enter_counters(request, app_selected):
                 for it in items:
                     if it.is_counter in TYPES:
                         counter = Counter.objects.filter(item=it, type=it.is_counter).order_by('-created').first()
-                        if not counter or counter.created.month != month:
+                        if not counter or counter.created.month != date.month:
                             counter = Counter.create(type=it.is_counter, value=0, item=it)
                         counter_list.append(counter)
 
@@ -445,7 +448,10 @@ def counters(request, app_selected):
     for item in items:
         counters = Counter.objects.filter(item=item.pk).order_by('-created')[:2]
 
-        if len(counters) > 1:  # Заполняем поле предыдущих показаний
+        if len(counters) == 1: # Заполняем поле предыдущих показаний
+            counters[0].previous = counters[0].value
+            counters[0].save()
+        elif len(counters) > 1:
             c2 = counters[1]
             c1 = counters[0]
             c1.previous = c2.value
@@ -472,11 +478,11 @@ def counter(request, app_selected, item_selected):
         counter = Counter(item=item, type=item.is_counter)
     else:
         obj = ''
-        if counters[0].created.month == month:
+        if counters[0].created.month == date.month:
             counter = counters[0]
         else:
             counter = Counter.create(item=counters[0].item, type=counters[0].type,
-                                 value=counters[0].value, previous=counters[0].value)
+                                     value=counters[0].value, previous=counters[0].value)
 
     if request.method == 'POST':
         form = CounterForm(request.POST, instance=counter)
@@ -495,10 +501,11 @@ def counter(request, app_selected, item_selected):
     return render(request, 'compay/counter.html', context)
 
 
-def topay(request, app_selected):
+ # edit submenu, limit float 2 digits
+def pay(request, app_selected, pay_selected):
     global msgs, LST, month, date
     clean_msgs()
-    topay_list = []
+    pay_list = []
 
     submenu = [{"title": "Ввести показания", 'url_name': 'counter'},
                {"title": "Изменить тариф", 'url_name': 'tarif'},
@@ -509,14 +516,37 @@ def topay(request, app_selected):
 
     for it in items:
         try:
-            topay = ToPay.objects.filter(item=it.pk, month=date.month).first()
-            topay_list.append(topay)
+            pay = Pay.objects.filter(item=it.pk, month=date.month).first()
+            if pay:
+                pay.debt = round((pay.topay - pay.payed), 2)
+                pay.save()
+                pay_list.append(pay)
         except:
             pass
 
+    if request.method == "POST":
+        form = PayedForm(request.POST)
+        if form.is_valid():
+            try:
+                pay = Pay.objects.get(pk=pay_selected)
+                pay.payed = form.cleaned_data['payed']
+                pay.debt = round((pay.topay - pay.payed), 2)
+                pay.save()
+            except:
+                pass
+        else:
+            pass
+    else:
+        try:
+            pay = Pay.objects.get(pk=pay_selected)
+            form = PayedForm(initial={'payed': pay.topay})
+        except:
+            form = PayedForm()
+
     context = {'title': 'Расчет для оплаты по: ', 'menu': menu, 'submenu': submenu, 'msgs': msgs,
-               'ap': ap, 'app_selected': app_selected, 'topay_list': topay_list, 'date': date}
-    return render(request, 'compay/topay.html', context)
+               'ap': ap, 'app_selected': app_selected, 'pay_selected': pay_selected, 'pay_list': pay_list,
+               'date': date, 'form': form}
+    return render(request, 'compay/pay.html', context)
 
 
 def create_items_for_app(app_selected):
@@ -605,6 +635,7 @@ def check_and_calculation(app_selected, month_selected):
     summary = 0
     ap = Appartment.objects.get(id=app_selected)
     items = Item.objects.filter(app=ap)
+    first = items.first()
 
     # Добавляем используемые для оплаты предметы в список для конкретного объекта:
     fields = ap.__dict__
@@ -633,76 +664,103 @@ def check_and_calculation(app_selected, month_selected):
                         if ok:
                             if tarif.el_counter_discrete == '':
                                 sum = tarif.value * (counter.value - counter.previous)
-                                sum_str = '('+str(counter.value)+' - '+str(counter.previous)+') * '+str(tarif.value)+' = '+str(sum)
+                                sum_str = '(' + str(counter.value) + ' - ' + str(counter.previous) + ') * ' + str(
+                                    tarif.value) + ' = ' + str(sum)
                                 try:
-                                    topay = ToPay.objects.filter(item=item, month=month_selected).first()
-                                    topay.value = sum
-                                    topay.calculation = sum_str
+                                    pay = Pay.objects.filter(item=item, month=month_selected).first()
+                                    pay.topay = sum
+                                    pay.calculation = sum_str
                                 except:
-                                    topay = ToPay(value=sum, month=month_selected, item=item, calculation=sum_str)
+                                    pay = Pay(topay=sum, month=month_selected, item=item, calculation=sum_str)
                                     # Добавить примечание с данными
-                                topay.save()
-                                summary += topay.value
+                                pay.save()
+                                summary += pay.topay
                                 if item.item_name == 'electricity' and item.is_counter == 'day':
-                                    topay_day = topay.value
+                                    topay_day = pay.topay
                                 elif item.item_name == 'electricity' and item.is_counter == 'night':
-                                    topay_night = topay.value
+                                    topay_night = pay.topay
                             else:
                                 for t in tarifs:
-                                    if t.from_value == 0:
+                                    if t.el_counter_discrete == '0-150':
                                         t0_150 = t.value
-                                    elif t.from_value == 150:
+                                    elif t.el_counter_discrete == '150-600':
                                         t150_600 = t.value
-                                    elif t.from_value == 600:
+                                    elif t.el_counter_discrete == '600+':
                                         t600 = t.value
                                 dif = counter.value - counter.previous
                                 if dif > 150:
                                     if dif > 600:
-                                        sum = 150 * t0_150 + 450 * t150_600 + (dif - 600) * t600
-                                        sum_str = '150 * '+str(t0_150)+' + 450 * '*str(t150_600)+' + ('+str(counter.value)+' - ' + str(counter.previous)+' - 600) * ' + str(t600)+' = '+str(sum)
+                                        sum = 150 * t0_150 + 600 * t150_600 + (dif - 600) * t600
+                                        sum_str = '150 * ' + str(t0_150) + ' + 600 * ' * str(t150_600) + ' + (' + str(
+                                            counter.value) + ' - ' + str(counter.previous) + ' - 600) * ' + str(
+                                            t600) + ' = ' + str(sum)
                                     else:
                                         sum = 150 * t0_150 + (dif - 150) * t150_600
-                                        sum_str = '150 * '+str(t0_150)+' + ('+str(counter.value)+' - '+ str(counter.previous)+' - 150) * ' + str(t150_600)+' = '+str(sum)
+                                        sum_str = '150 * ' + str(t0_150) + ' + (' + str(counter.value) + ' - ' + str(
+                                            counter.previous) + ' - 150) * ' + str(t150_600) + ' = ' + str(sum)
                                 else:
                                     sum = dif * t0_150
-                                    sum_str = '(' + str(counter.value)+' - '+str(counter.previous)+') * ' + str(t0_150)+' = '+str(sum)
+                                    sum_str = '(' + str(counter.value) + ' - ' + str(counter.previous) + ') * ' + str(
+                                        t0_150) + ' = ' + str(sum)
                                 try:
-                                    topay = ToPay.objects.filter(item=item, month=month_selected).first()
-                                    topay.value = sum
-                                    topay.calculation = sum_str
+                                    pay = Pay.objects.filter(item=item, month=month_selected).first()
+                                    pay.topay = sum
+                                    pay.calculation = sum_str
                                 except:
-                                    topay = ToPay(value=sum, calculation=sum_str, month=month_selected, item=item)
+                                    pay = Pay(topay=sum, calculation=sum_str, month=month_selected, item=item)
                                     # Добавить примечание с данными
-                                topay.save()
-                                summary += topay.value
+                                pay.save()
+                                summary += pay.topay
                                 if item.item_name == 'electricity' and item.is_counter == 'day':
-                                    topay_day = topay.value
+                                    topay_day = pay.topay
                                 elif item.item_name == 'electricity' and item.is_counter == 'night':
-                                    topay_night = topay.value
+                                    topay_night = pay.topay
                 elif item.is_counter == 'tarif':
                     if ok:
                         try:
-                            topay = ToPay.objects.filter(item=item, month=month_selected).first()
-                            topay.value = tarif.value
-                            topay.calculation = 'тариф - ' + str(tarif.value)
+                            pay = Pay.objects.filter(item=item, month=month_selected).first()
+                            pay.topay = tarif.value
+                            pay.calculation = 'тариф - ' + str(tarif.value)
                         except:
-                            topay = ToPay(value=tarif.value, calculation=('тариф - ' + str(tarif.value)), month=month_selected, item=item)
-                        topay.save()
-                        summary += topay.value
+                            pay = Pay(topay=tarif.value, calculation=('тариф - ' + str(tarif.value)),
+                                          month=month_selected, item=item)
+                        pay.save()
+                        summary += pay.topay
 
     if 'electricity' in lst:
         for item in items:
             if item.item_name == 'electricity':
                 if item.is_counter == 'total':
                     try:
-                        topay = ToPay.objects.filter(item=item, month=month_selected).first()
-                        topay.value = (topay_night + topay_day)
-                        topay.calculation = 'день-' + str(topay_day) + ' + ночь-' + str(topay_night)+' = '+str(topay_night + topay_day)
+                        pay = Pay.objects.filter(item=item, month=month_selected).first()
+                        pay.topay = (topay_night + topay_day)
+                        pay.calculation = 'день-' + str(topay_day) + ' + ночь-' + str(topay_night) + ' = ' + str(
+                            topay_night + topay_day)
                     except:
-                        topay = ToPay(value=(topay_night + topay_day), calculation=('день-'+ str(topay_day) + ' + ночь-'+ str(topay_night)+' = '+str(topay_night + topay_day)), month=month_selected, item=item)
-                    topay.save()
+                        pay = Pay(topay=(topay_night + topay_day), calculation=(
+                                    'день-' + str(topay_day) + ' + ночь-' + str(topay_night) + ' = ' + str(
+                                topay_night + topay_day)), month=month_selected, item=item)
+                    pay.save()
+    pay_selected = Pay.objects.filter(item=first, month=month_selected).first().pk
+    return summary, pay_selected
 
-    return summary
+
+def count_payed_and_debts(app_selected, month_selected):
+    global msgs, date
+    lst_template = ['counter', 'tarif', 'total']
+    payed_total = 0
+    debts_total = 0
+    ap = Appartment.objects.get(id=app_selected)
+    items = Item.objects.filter(app=ap)
+
+    for it in items:
+        if it.is_counter in lst_template:
+            pay = Pay.objects.filter(item=it, month=month_selected).first()
+            if pay:
+                payed_total += pay.payed
+                debts_total += pay.debt
+
+    return payed_total, debts_total
 
 
 def clean_msgs(msg_to_clean=None):

@@ -64,3 +64,7 @@ class MonthForm(forms.Form):
 
     date = forms.DateField(widget=forms.SelectDateWidget(months=MONTHES), label='',
                            initial=datetime.date.today, )
+
+
+class PayedForm(forms.Form):
+    payed = forms.FloatField(label='Оплачено')

@@ -15,5 +15,5 @@ urlpatterns = [
     path('counter/<int:app_selected>/<int:item_selected>/', counter, name='counter'),
     path('enter_info/<int:app_selected>/<int:item_selected>/', enter_info, name='enter_info'),
     path('counters/<int:app_selected>/', counters, name='counters'),
-    path('topay/<int:app_selected>/', topay, name='topay')
+    path('pay/<int:app_selected>/<int:pay_selected>/', pay, name='pay')
     ]

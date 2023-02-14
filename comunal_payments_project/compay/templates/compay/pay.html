@@ -1,0 +1,40 @@
+{% extends 'compay/base.html' %}
+
+{% block content %}
+<div class="main">
+    <div class="title">
+        <div>{{ title }}<a  href="{% url 'app' ap.id %}" class="links">{{ ap }}</a></div>
+        <div>{{ date }}</div>
+    </div>
+
+    <div  class="submenu">
+        {% for s in submenu %}
+                <a href="#" class="submenu_link">{{s.title}}</a> |
+        {% endfor %}
+    </div>
+
+    <h3 class="obj">{{ obj }}</h3>
+
+    <div class="window">
+
+        <div>
+        {% for pay in pay_list %}
+            {% if pay.pk == pay_selected %}
+                <form action="{% url 'pay' ap.pk pay.pk %}" method="post">
+                    {% csrf_token %}
+                    <h3 class="text с">{{ pay }}: К оплате: {{ pay.topay|floatformat:2 }} >> >>  {{form}}
+                    <button type="submit">Сохранить</button> >> >> Долг: {{ pay.debt|floatformat:2  }}</h3>
+                    <h4 class="text date">{{ pay.calculation }} / {{ pay.updated }}</h4>
+
+                </form>
+            {% else %}
+                <h3 class="text с"><a href="{% url 'pay' ap.pk pay.pk %}">{{ pay }}</a>:
+                    К оплате: {{ pay.topay|floatformat:2 }} >> >> Оплачено: {{ pay.payed|floatformat:2 }} >> >> Долг:
+                    {{ pay.debt|floatformat:2 }}</h3>
+                <h4 class="text date">{{ pay.calculation }} / {{ pay.updated }}</h4>
+            {% endif %}
+        {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

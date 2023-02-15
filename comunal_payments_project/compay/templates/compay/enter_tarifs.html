@@ -7,18 +7,22 @@
 		<div>{{ title }}<a href="{% url 'app' ap.id %}" class="links">{{ ap.name }}</a></div>
 		<div>{{ date }}</div>
 	</div>
-	<h3 class="obj"></h3>
+	<h3 class="obj">{{ obj }}</h3>
 	<div class="window">
+		{% if form_list %}
 		<div class="form">
 			<form action="{% url 'enter_tarifs' app_selected %} " method='POST'>
 				{% csrf_token %}
-				{% for form in form_list %}
-					<p>{{ form }}</p>
-				{% endfor %}
+				<table class="tbl">
+					{% for form in form_list %}
+						{{ form.as_table }}
+					{% endfor %}
+				</table>
 				<br><br>
 				<button type="submit">Сохранить</button>
 			</form>
 		</div>
+		{% endif %}
 	</div>
 </div>
 

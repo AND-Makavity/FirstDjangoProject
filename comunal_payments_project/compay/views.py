@@ -1,4 +1,3 @@
-
 from django.shortcuts import render, redirect
 
 from .forms import *
@@ -27,6 +26,7 @@ def index(request):
         obj = ''
     else:
         obj = 'Пока тут нет объектов. Добавьте новый'
+
     context = {'title': 'Приложение для учета комунальных платежей', 'menu': menu, 'msgs': msgs, 'apps': apps,
                'obj': obj, 'form': form, 'date': date}
     return render(request, 'compay/index.html', context)
@@ -38,6 +38,8 @@ def app(request, app_selected):
     clean_msgs()
     create_items_for_app(app_selected)
 
+    obj = ''
+
     if request.method == 'GET':
         try:
             c = request.GET['count']
@@ -47,18 +49,21 @@ def app(request, app_selected):
             summary, pay_selected = check_and_calculation(app_selected, date.month)
             payed_total, debt_total = count_payed_and_debts(app_selected, date.month)
         else:
-            summary = '0'
+            summary = 0
             pay_selected = 0
-            payed_total = '0'
-            debt_total = '0'
+            payed_total = 0
+            debt_total = 0
     else:
-        summary = '0'
+        summary = 0
         pay_selected = 0
-        payed_total = '0'
-        debt_total = '0'
+        payed_total = 0
+        debt_total = 0
 
     items = Item.objects.filter(app_id=app_selected)
-    ap = items.first().app
+    ap = Appartment.objects.get(pk=app_selected)
+
+    if not items:
+        obj = f'В конфигурации для {ap.name} не выбраны виды оплаты'
 
     info_list = Info.objects.filter(app=ap).order_by('-created')[:4]
     if len(info_list) == 0:
@@ -68,11 +73,12 @@ def app(request, app_selected):
                {"title": "Посмотреть тарифы", 'url_name': 'tarifs', 'app_selected': app_selected},
                {"title": "Ввести счетчики", 'url_name': 'enter_counters', 'app_selected': app_selected},
                {"title": "Ввести тарифы", 'url_name': 'enter_tarifs', 'app_selected': app_selected},
+               {"title": "Расчёт оплаты", 'url_name': 'pay', 'app_selected': app_selected},
                {"title": "    Инфо    ", 'url_name': 'info', 'app_selected': app_selected},
-               {"title": "Конфигурация", 'url_name': 'config_app', 'app_selected': app_selected}]  # !!!HERE!!!!
+               {"title": "Конфигурация", 'url_name': 'config_app', 'app_selected': app_selected}]
 
     context = {'title': 'Страница объекта: ', 'menu': menu, 'submenu': submenu, 'msgs': msgs, 'date': date,
-               'ap': ap, 'items': items, 'app_selected': app_selected, 'pay_selected': pay_selected,
+               'ap': ap, 'obj': obj, 'items': items, 'app_selected': app_selected, 'pay_selected': pay_selected,
                'info_list': info_list, 'summary': summary, 'payed_total': payed_total, 'debt_total': debt_total}
     return render(request, 'compay/app.html', context)
 
@@ -118,6 +124,7 @@ def item(request, app_selected, item_selected):
                    {"title": "Изменить тариф", 'url_name': 'tarif'},
                    {"title": "Редактировать инфо", 'url_name': 'enter_info'}]
     else:
+        obj = ''
         submenu = [{"title": "Редактировать инфо", 'url_name': 'enter_info'}]
 
     context = {'title': 'Показания для: ', 'menu': menu, 'msgs': msgs, 'item': item, 'obj': obj,
@@ -125,26 +132,61 @@ def item(request, app_selected, item_selected):
     return render(request, 'compay/item.html', context)
 
 
-def calculation(request, app_selected, month_selected):
-    pass
+def pay_history(request, app_selected, item_selected=0):
+    global msgs, date
+    clean_msgs()
+    lst = []
+
+    ap = Appartment.objects.get(id=app_selected)
+    items = Item.objects.filter(app_id=app_selected)
+
+    pay_list = Pay.objects.filter(item=item_selected).order_by('-month')
+
+    for item in items:
+        if item.is_counter not in ['day', 'night']:
+            lst.append(item)
+
+    if not lst:
+        obj = f'В конфигурации для {ap.name} не выбраны виды оплаты'
+    else:
+        if item_selected == 0:
+            obj = 'Выберите вид оплаты из списка'
+        elif not pay_list:
+            obj = 'По этому виду оплаты пока нет записей в истории платежей'
+        else:
+            obj = ''
+
+    context = {'title': 'История платежей по: ', 'menu': menu, 'msgs': msgs, 'ap': ap, 'obj': obj,
+               'app_selected': app_selected, 'pay_list': pay_list, 'date': date, 'lst': lst}
+    return render(request, 'compay/pay_history.html', context)
 
 
 # DONE
 def info(request, app_selected):
     global msgs, date
     clean_msgs()
+    lst = []
+    obj = ''
 
     ap = Appartment.objects.get(id=app_selected)
+    items = Item.objects.filter(app_id=app_selected)
 
     info_list = Info.objects.filter(app=ap)
 
-    if not info:
-        obj = 'Нет записей'
+    if not info_list:
+        obj = 'Сейчас тут нет записей с информацией, для добавления выберите ссылку ниже:'
     else:
         obj = ''
 
+    for item in items:
+        if item.is_counter not in ['day', 'night']:
+            lst.append(item)
+
+    if not lst:
+        obj = f'В конфигурации для {ap.name} не выбраны виды оплаты'
+
     context = {'title': 'Информация для расчетов по: ', 'menu': menu, 'msgs': msgs, 'ap': ap, 'obj': obj,
-               'app_selected': app_selected, 'info_list': info_list, 'date': date}
+               'app_selected': app_selected, 'info_list': info_list, 'date': date, 'lst': lst}
     return render(request, 'compay/info.html', context)
 
 
@@ -216,6 +258,7 @@ def enter_tarifs(request, app_selected):
     TYPES = ['counter', 'day', 'night', 'tarif']
     LST = ['electricity', 'water', 'gas', 'kv', 'domofon', 'inet', 'tbo', 'other']
     tarif_list = []
+    obj = ''
 
     ap = Appartment.objects.get(pk=app_selected)
 
@@ -291,20 +334,21 @@ def enter_tarifs(request, app_selected):
             form.label_suffix = label
             form_list.append(form)
 
-    context = {'title': 'Введите значения тарифов: ', 'menu': menu, 'msgs': msgs,
+    if not form_list:
+        obj = f'В конфигурации для {ap.name} не выбраны виды оплаты'
+
+    context = {'title': 'Введите значения тарифов: ', 'menu': menu, 'obj': obj, 'msgs': msgs,
                'ap': ap, 'app_selected': app_selected, 'form_list': form_list, 'date': date}
     return render(request, 'compay/enter_tarifs.html', context)
 
 
-# Убрать submenu
 def tarifs(request, app_selected):
     global msgs, LST, date
     clean_msgs()
     tarif_list = []
+    obj = ''
 
-    submenu = [{"title": "Ввести показания", 'url_name': 'counter'},
-               {"title": "Изменить тариф", 'url_name': 'tarif'},
-               {"title": "История начислений", 'url_name': 'counter'}]
+    submenu = []
 
     ap = Appartment.objects.get(pk=app_selected)
     items = Item.objects.filter(app_id=app_selected)
@@ -314,7 +358,10 @@ def tarifs(request, app_selected):
         for tarif in tarifs:
             tarif_list.append(tarif)
 
-    context = {'title': 'Тарифы для: ', 'menu': menu, 'submenu': submenu, 'msgs': msgs,
+    if not tarif_list:
+        obj = 'Сейчас тут нет записей'
+
+    context = {'title': 'Тарифы для: ', 'menu': menu, 'submenu': submenu, 'obj': obj, 'msgs': msgs,
                'ap': ap, 'app_selected': app_selected, 'tarif_list': tarif_list, 'date': date}
     return render(request, 'compay/tarifs.html', context)
 
@@ -388,6 +435,7 @@ def enter_counters(request, app_selected):
 
     TYPES = ['counter', 'day', 'night']
     counter_list = []
+    obj = ''
 
     ap = Appartment.objects.get(pk=app_selected)
 
@@ -429,7 +477,10 @@ def enter_counters(request, app_selected):
             form.label_suffix = label
             form_list.append(form)
 
-    context = {'title': 'Введите показания счетчиков: ', 'menu': menu, 'msgs': msgs,
+    if not form_list:
+        obj = f'В конфигурации для {ap.name} нет счетчиков для заполнения'
+
+    context = {'title': 'Введите показания счетчиков: ', 'menu': menu, 'obj': obj, 'msgs': msgs,
                'ap': ap, 'app_selected': app_selected, 'form_list': form_list, 'date': date}
     return render(request, 'compay/enter_counters.html', context)
 
@@ -438,17 +489,16 @@ def counters(request, app_selected):
     global msgs, LST, date
     clean_msgs()
     counter_list = []
+    obj = ''
 
-    submenu = [{"title": "Ввести показания", 'url_name': 'counter'},
-               {"title": "Изменить тариф", 'url_name': 'tarif'},
-               {"title": "История начислений", 'url_name': 'counter'}]
+    submenu = []
 
     ap = Appartment.objects.get(pk=app_selected)
     items = Item.objects.filter(app_id=app_selected)
     for item in items:
         counters = Counter.objects.filter(item=item.pk).order_by('-created')[:2]
 
-        if len(counters) == 1: # Заполняем поле предыдущих показаний
+        if len(counters) == 1:  # Заполняем поле предыдущих показаний
             counters[0].previous = counters[0].value
             counters[0].save()
         elif len(counters) > 1:
@@ -460,7 +510,10 @@ def counters(request, app_selected):
         for counter in counters:
             counter_list.append(counter)
 
-    context = {'title': 'Показания счетчиков: ', 'menu': menu, 'submenu': submenu, 'msgs': msgs,
+    if not counter_list:
+        obj = 'Сейчас тут нет записей'
+
+    context = {'title': 'Показания счетчиков: ', 'menu': menu, 'submenu': submenu, 'obj': obj, 'msgs': msgs,
                'ap': ap, 'app_selected': app_selected, 'counter_list': counter_list, 'date': date}
     return render(request, 'compay/counters.html', context)
 
@@ -501,15 +554,12 @@ def counter(request, app_selected, item_selected):
     return render(request, 'compay/counter.html', context)
 
 
- # edit submenu, limit float 2 digits
-def pay(request, app_selected, pay_selected):
+def pay(request, app_selected, pay_selected=0):
     global msgs, LST, month, date
     clean_msgs()
     pay_list = []
 
-    submenu = [{"title": "Ввести показания", 'url_name': 'counter'},
-               {"title": "Изменить тариф", 'url_name': 'tarif'},
-               {"title": "История начислений", 'url_name': 'counter'}]
+    submenu = [{"title": "История расчетов", 'url_name': 'pay_history', 'app_selected': app_selected}]
 
     ap = Appartment.objects.get(pk=app_selected)
     items = Item.objects.filter(app_id=app_selected)
@@ -539,11 +589,22 @@ def pay(request, app_selected, pay_selected):
     else:
         try:
             pay = Pay.objects.get(pk=pay_selected)
-            form = PayedForm(initial={'payed': pay.topay})
+            if pay.payed:
+                form = PayedForm(initial={'payed': pay.payed})
+            else:
+                form = PayedForm(initial={'payed': pay.topay})
         except:
             form = PayedForm()
 
-    context = {'title': 'Расчет для оплаты по: ', 'menu': menu, 'submenu': submenu, 'msgs': msgs,
+    if not pay_list:
+        obj = 'Сейчас тут нет записей'
+    else:
+        if pay_selected == 0:
+            msg_add(ap, 'Для ввода оплаты нажмите на наименование вида оплаты в таблице', 'Pay-Enter')
+        else:
+            clean_msgs('Pay-Enter')
+
+    context = {'title': 'Расчет для оплаты по: ', 'menu': menu, 'submenu': submenu, 'obj': obj, 'msgs': msgs,
                'ap': ap, 'app_selected': app_selected, 'pay_selected': pay_selected, 'pay_list': pay_list,
                'date': date, 'form': form}
     return render(request, 'compay/pay.html', context)
@@ -579,17 +640,23 @@ def create_items_for_app(app_selected):
                         a.save()
                         b.save()
                         c.save()
+                        msgs.append(dict(key=str(b) + '/' + str(c), text='Вам необходимо задать начальные '
+                                                                         'показания счетчиков',
+                                         description='config_item'))
                     else:
                         a.is_counter = ap.__dict__[conf[el]]
                         a.save()
+                        if a.is_counter == 'counter':
+                            msgs.append(dict(key=a, text='Вам необходимо задать начальные показания счетчиков',
+                                             description='config_item'))
                 else:
                     a.is_counter = ap.__dict__[conf[el]]
                     a.save()
+                    if a.is_counter == 'counter':
+                        msgs.append(dict(key=a, text='Вам необходимо задать начальные показания счетчиков',
+                                         description='config_item'))
             else:
                 a.save()
-
-        msgs.append(dict(key=str(ap), text='Вам необходимо задать начальные показания счетчиков',
-                         description='config_item'))
 
     else:  # Проверяем есть ли отсутствующие предметы
         for el in lst:
@@ -723,7 +790,7 @@ def check_and_calculation(app_selected, month_selected):
                             pay.calculation = 'тариф - ' + str(tarif.value)
                         except:
                             pay = Pay(topay=tarif.value, calculation=('тариф - ' + str(tarif.value)),
-                                          month=month_selected, item=item)
+                                      month=month_selected, item=item)
                         pay.save()
                         summary += pay.topay
 
@@ -738,10 +805,13 @@ def check_and_calculation(app_selected, month_selected):
                             topay_night + topay_day)
                     except:
                         pay = Pay(topay=(topay_night + topay_day), calculation=(
-                                    'день-' + str(topay_day) + ' + ночь-' + str(topay_night) + ' = ' + str(
-                                topay_night + topay_day)), month=month_selected, item=item)
+                                'день-' + str(topay_day) + ' + ночь-' + str(topay_night) + ' = ' + str(
+                            topay_night + topay_day)), month=month_selected, item=item)
                     pay.save()
-    pay_selected = Pay.objects.filter(item=first, month=month_selected).first().pk
+    try:
+        pay_selected = Pay.objects.filter(item=first, month=month_selected).first().pk
+    except:
+        pay_selected = 0
     return summary, pay_selected
 
 

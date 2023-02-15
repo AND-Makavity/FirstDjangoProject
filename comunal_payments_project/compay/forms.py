@@ -56,6 +56,11 @@ class InfoForm(forms.ModelForm):
         model = Info
         fields = '__all__'
         exclude = ('created', 'app', 'item')
+        widgets = {
+            'item_provider': forms.TextInput(attrs={'size': '42'}),
+            'item_user_number': forms.TextInput(attrs={'size': '42'}),
+            'item_comment': forms.Textarea(attrs={'size': '42', 'rows': '5'}),
+        }
 
 
 class MonthForm(forms.Form):
@@ -67,4 +72,4 @@ class MonthForm(forms.Form):
 
 
 class PayedForm(forms.Form):
-    payed = forms.FloatField(label='Оплачено')
+    payed = forms.FloatField(label='')

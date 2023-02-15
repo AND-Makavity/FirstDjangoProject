@@ -30,6 +30,11 @@ html, body {
     padding-left: 25px;
 }
 
+.alert p {
+    margin-top: 1.4rem;
+    margin-bottom: 0;
+}
+
 .menu {
     display: flex;
     justify-content: space-between;
@@ -100,7 +105,7 @@ html, body {
 .obj {
     margin: 0;
     margin: 20px 0px 0px 40px;
-    color: #224b8c;
+    color: #887979;
 }
 
 .icon_img {
@@ -109,6 +114,54 @@ html, body {
     width: 18px;
 }
 
+.tbl, tbl1 {
+    vertical-align: top;
+}
+
+.tbl th {
+    text-align: left;
+    padding: 0 10px;
+}
+
+.tbl td {
+    padding: 0 20px;
+    text-align: center;
+}
+
+.tbl1 td {
+    padding: 0 20px;
+}
+
+.tbl1 th {
+    text-align: left;
+    padding: 0 10px;
+}
+
+.c1 {
+    border: 1px solid #e7e0e0;
+}
+
+tbody {
+    vertical-align: inherit;
+}
+
+.btn1 {
+    display: block;
+    position: relative;
+    left: 475px;
+}
+
+.cell1 {
+    min-width: 550px;
+    padding-left: 30px;
+    border: 1px solid #e7e0e0;
+}
+
+.cell2 {
+    min-width: 100px;
+    text-align: center;
+    border: 1px solid #e7e0e0;
+}
 
 .form {
     padding: 40px 40px;

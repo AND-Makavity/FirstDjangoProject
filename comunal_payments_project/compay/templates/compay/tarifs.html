@@ -17,14 +17,15 @@
 
     <div class="window">
 
-        <div>
+        <table>
         {% for tarif in tarif_list %}
-
-            <h3 class="text"><a  href="{% url 'tarif' ap.id tarif.item_id %}" class="links">{{ tarif }}:</a>  {{ tarif.value }}</h3>
-            <h5 class="date">{{ tarif.created }}</h5>
-
+        <tr>
+            <td class="cell1"><h3 class="text"><a  href="{% url 'tarif' ap.id tarif.item_id %}" class="links">{{ tarif }}:</a></h3>
+            <h5 class="date">{{ tarif.created }}</h5></td>
+            <td class="cell2"><h3>{{ tarif.value }}</h3></td>
+        </tr>
         {% endfor %}
-        </div>
+        </table>
     </div>
 </div>
 {% endblock %}

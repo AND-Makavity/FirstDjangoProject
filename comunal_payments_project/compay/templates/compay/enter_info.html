@@ -3,7 +3,7 @@
 {% block content %}
 <div class="main">
 	<div class="title">
-        <div>{{ title }}<a  href="{% url 'app' item.app_id %}" class="links">{{ item }}</a></div>
+        <div>{{ title }}<a  href="{% url 'info' item.app_id %}" class="links">{{ item }}</a></div>
         <div>{{ date }}</div>
     </div>
 
@@ -17,9 +17,9 @@
 		<div class="form">
 			<form action="{% url 'enter_info' app_selected item.id %} " method='POST'>
 				{% csrf_token %}
-                {{ form.as_p }}
+                <table class="tbl">{{ form.as_table }}</table>
                 <br><br>
-				<button type="submit">Сохранить</button>
+				<button type="submit" class="btn1">Сохранить</button>
 			</form>
         </div>
     </div>

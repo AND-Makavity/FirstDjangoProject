@@ -1,0 +1,36 @@
+{% extends 'compay/base.html' %}
+
+{% block content %}
+<div class="main">
+	<div class="title">
+        <div>{{ title }}<a  href="{% url 'pay' app_selected %}" class="links">{{ ap }}</a></div>
+        <div>{{ date }}</div>
+    </div>
+
+    <h3 class="obj">{{ obj }}</h3>
+
+    <div class="window">
+
+        {% if pay_sum %}
+        <table class="tbl">
+            <tr>
+                <td class="c1"><h3>Месяц</h3></td>
+                <td class="c1"><h3>К оплате</h3></td>
+                <td class="c1"><h3>Оплачено</h3></td>
+                <td class="c1"><h3>Долг/Переплата</h3></td>
+                <td class="c1"><h3>Долг итого</h3></td>
+            </tr>
+            {% for pay in pay_sum %}
+            <tr>
+                <td class="c1"><h3 class="text c">{{ pay.get_month_display }}</h3></td>
+                <td class="c1"><h3 class="text c">{{ pay.topay }}</h3></td>
+                <td class="c1"><h3 class="text c">{{ pay.payed }}</h3></td>
+                <td class="c1"><h3 class="text c">{{ pay.debt }}</h3></td>
+                <td class="c1"><h3 class="text c">{{ pay.debt_summary }}</h3></td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

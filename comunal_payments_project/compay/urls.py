@@ -18,5 +18,9 @@ urlpatterns = [
     path('pay/<int:app_selected>/<int:pay_selected>/', pay, name='pay'),
     path('pay/<int:app_selected>/', pay, name='pay'),
     path('pay_history/<int:app_selected>/<int:item_selected>/', pay_history, name='pay_history'),
-    path('pay_history/<int:app_selected>/', pay_history, name='pay_history')
+    path('pay_history/<int:app_selected>/', pay_history, name='pay_history'),
+    path('statistic/<int:app_selected>/', statistic, name='statistic'),
+    path('register/', RegisterUser.as_view(), name='register'),
+    path('login/', LoginUser.as_view(), name='login'),
+    path('logout/', logout_user, name='logout')
     ]

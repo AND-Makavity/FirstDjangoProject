@@ -62,8 +62,8 @@ html, body {
     border: solid 1px black;
 }
 
-.end {
-    justify-content: end;
+.custom1 {
+    justify-content: space-between;
 }
 
 .submenu_link {
@@ -124,6 +124,7 @@ html, body {
 }
 
 .tbl td {
+    color: #454d5a;
     padding: 0 20px;
     text-align: center;
 }
@@ -143,6 +144,25 @@ html, body {
 
 tbody {
     vertical-align: inherit;
+}
+
+.info-box {
+    display: block;
+    min-width: 300px;
+    padding-right: 30px;
+}
+
+.reg {
+    display: block;
+    min-height: 200px;
+    width: 320px;
+    padding: 30px;
+    margin: 0 auto;
+    text-align: right;
+}
+
+.form-reg label {
+text-align: left;
 }
 
 .btn1 {

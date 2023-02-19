@@ -1,18 +1,27 @@
+from django.contrib.auth import logout, login
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.views import LoginView
 from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
+from django.views.generic import CreateView
 
 from .forms import *
 
-menu = [{"title": "Главная страница", 'url_name': 'home'}, {"title": "Добавить объект", 'url_name': 'add_app'}, ]
+menu = {"title": "Главная страница", 'url_name': 'home'}
 LST = ['electricity', 'water', 'gas']
 msgs = []
 date = datetime.date.today()
 month = date.month
 
-
 # DONE
 def index(request):
     global msgs, date, month
-    clean_msgs()
+    clean_msgs('Calculation-Tarif')
+    clean_msgs('Calculation-Counter')
+    clean_msgs('config_item')
+
+    if not request.user.is_authenticated:
+        return redirect('login')
 
     if request.method == "POST":
         form = MonthForm(request.POST)
@@ -35,10 +44,20 @@ def index(request):
 # DONE
 def app(request, app_selected):
     global msgs, month, date
-    clean_msgs()
+    clean_msgs('Pay-Enter')
     create_items_for_app(app_selected)
 
     obj = ''
+
+    try:
+        pay_sum = PaySummary.objects.filter(app=app_selected, month=date.month).first()
+    except:
+        pass
+    if not pay_sum:
+        pay_sum = PaySummary(app_id=app_selected, month=date.month)
+        btn = 'Расчёт'
+    else:
+        btn = 'Пересчёт'
 
     if request.method == 'GET':
         try:
@@ -46,18 +65,14 @@ def app(request, app_selected):
         except:
             c = None
         if c:
-            summary, pay_selected = check_and_calculation(app_selected, date.month)
-            payed_total, debt_total = count_payed_and_debts(app_selected, date.month)
+            pay_sum.topay, pay_selected = check_and_calculation(app_selected, date.month)
+            pay_sum.payed, pay_sum.debt = count_payed_and_debts(app_selected, date.month)
+            pay_sum.save()
         else:
-            summary = 0
             pay_selected = 0
-            payed_total = 0
-            debt_total = 0
     else:
-        summary = 0
         pay_selected = 0
-        payed_total = 0
-        debt_total = 0
+
 
     items = Item.objects.filter(app_id=app_selected)
     ap = Appartment.objects.get(pk=app_selected)
@@ -79,7 +94,7 @@ def app(request, app_selected):
 
     context = {'title': 'Страница объекта: ', 'menu': menu, 'submenu': submenu, 'msgs': msgs, 'date': date,
                'ap': ap, 'obj': obj, 'items': items, 'app_selected': app_selected, 'pay_selected': pay_selected,
-               'info_list': info_list, 'summary': summary, 'payed_total': payed_total, 'debt_total': debt_total}
+               'info_list': info_list, 'pay_sum': pay_sum, 'btn': btn}
     return render(request, 'compay/app.html', context)
 
 
@@ -134,7 +149,7 @@ def item(request, app_selected, item_selected):
 
 def pay_history(request, app_selected, item_selected=0):
     global msgs, date
-    clean_msgs()
+    clean_msgs('Pay-Enter')
     lst = []
 
     ap = Appartment.objects.get(id=app_selected)
@@ -159,6 +174,23 @@ def pay_history(request, app_selected, item_selected=0):
     context = {'title': 'История платежей по: ', 'menu': menu, 'msgs': msgs, 'ap': ap, 'obj': obj,
                'app_selected': app_selected, 'pay_list': pay_list, 'date': date, 'lst': lst}
     return render(request, 'compay/pay_history.html', context)
+
+
+def statistic(request, app_selected):
+    global msgs, date
+    clean_msgs('Pay-Enter')
+    obj = ''
+
+    ap = Appartment.objects.get(id=app_selected)
+    pay_sum = PaySummary.objects.filter(app=ap).order_by('created')
+
+    if not pay_sum:
+        obj = 'Тут пока нет записей истории платежей'
+
+
+    context = {'title': 'История платежей по: ', 'menu': menu, 'msgs': msgs, 'ap': ap, 'obj': obj,
+               'app_selected': app_selected, 'pay_sum': pay_sum, 'date': date}
+    return render(request, 'compay/statistic.html', context)
 
 
 # DONE
@@ -359,7 +391,7 @@ def tarifs(request, app_selected):
             tarif_list.append(tarif)
 
     if not tarif_list:
-        obj = 'Сейчас тут нет записей'
+        obj = 'Сейчас тут нет записей, перейдите в меню Ввести тарифы'
 
     context = {'title': 'Тарифы для: ', 'menu': menu, 'submenu': submenu, 'obj': obj, 'msgs': msgs,
                'ap': ap, 'app_selected': app_selected, 'tarif_list': tarif_list, 'date': date}
@@ -499,8 +531,9 @@ def counters(request, app_selected):
         counters = Counter.objects.filter(item=item.pk).order_by('-created')[:2]
 
         if len(counters) == 1:  # Заполняем поле предыдущих показаний
-            counters[0].previous = counters[0].value
-            counters[0].save()
+            if counters[0].previous == 0:
+                counters[0].previous = counters[0].value
+                counters[0].save()
         elif len(counters) > 1:
             c2 = counters[1]
             c1 = counters[0]
@@ -541,7 +574,7 @@ def counter(request, app_selected, item_selected):
         form = CounterForm(request.POST, instance=counter)
         if form.is_valid():
             form.save()
-            return redirect('app', app_selected)
+            return redirect('counters', app_selected)
         else:
             msgs.append(dict(key=str(item) + ' Error', text='Ошибка ввода данных!',
                              description='Error'))
@@ -558,8 +591,10 @@ def pay(request, app_selected, pay_selected=0):
     global msgs, LST, month, date
     clean_msgs()
     pay_list = []
+    obj = ''
 
-    submenu = [{"title": "История расчетов", 'url_name': 'pay_history', 'app_selected': app_selected}]
+    submenu = [{"title": "История расчетов", 'url_name': 'pay_history', 'app_selected': app_selected},
+               {"title": "Итоговый отчет", 'url_name': 'statistic', 'app_selected': app_selected}]
 
     ap = Appartment.objects.get(pk=app_selected)
     items = Item.objects.filter(app_id=app_selected)
@@ -838,9 +873,10 @@ def clean_msgs(msg_to_clean=None):
     msgs_clean_list = ['Error']
     msgs_clean_list.append(msg_to_clean)
 
-    for msg in msgs:
-        if msg['description'] in msgs_clean_list:
-            msgs.remove(msg)
+    for i in range(3):
+        for msg in msgs:
+            if msg['description'] in msgs_clean_list:
+                msgs.remove(msg)
 
 
 def msg_add(key, text, description):
@@ -852,3 +888,27 @@ def msg_add(key, text, description):
             ok = False
     if ok:
         msgs.append(dict(key=key, text=text, description=description))
+
+
+class RegisterUser(CreateView):
+    form_class = RegisterUserForm
+    template_name = 'compay/register.html'
+    success_url = reverse_lazy('home')
+
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)
+        return redirect('home')
+
+
+class LoginUser(LoginView):
+    form_class = AuthenticationForm
+    template_name = 'compay/login.html'
+
+    def get_success_url(self):
+        return reverse_lazy('home')
+
+
+def logout_user(request):
+    logout(request)
+    return redirect('login')

@@ -41,6 +41,13 @@ class PayAdmin(admin.ModelAdmin):
     search_fields = ('item',)
 
 
+class PaySummaryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'app', 'topay', 'payed', 'debt', 'debt_summary', 'debt_sum_before', 'month',
+                    'comment', 'created', 'updated')
+    list_display_links = ('id', 'app', )
+    search_fields = ('item',)
+
+
 
 admin.site.register(Appartment, AppartmentAdmin)
 admin.site.register(Item, ItemAdmin)
@@ -48,5 +55,6 @@ admin.site.register(Tarif, TarifAdmin)
 admin.site.register(Info, InfoAdmin)
 admin.site.register(Counter, CounterAdmin)
 admin.site.register(Pay, PayAdmin)
+admin.site.register(PaySummary, PaySummaryAdmin)
 
 

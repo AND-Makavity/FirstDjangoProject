@@ -1,0 +1,18 @@
+{% extends 'compay/base.html' %}
+
+{% block content %}
+<div class="main">
+	<div class="title">
+        <div>{{ title }}</div>
+    </div>
+
+    <form method="post" class="reg">
+        {% csrf_token %}
+        <h2 style="text-align: center">Регистрация</h2>
+        {{ form.as_p }}
+        <br>
+        <button type="submit">Регистрация</button>
+    </form>
+</div>
+
+{% endblock %}

@@ -25,13 +25,13 @@
 		</div>
 		<div class="wrapper">
 			<a href="?count=yes" class="big_btn" method="get">
-				<h2 class="text">Расчёт</h2>
+				<h2 class="text">{{ btn }}</h2>
 			</a>
 
 			<h3 class="text c">Месяц: {{ date|date:'F' }} </h3>
-			<h3 class="text c">К оплате: {{ summary|floatformat:2 }} р.</h3>
-			<h3 class="text c">Оплачено: {{ payed_total|floatformat:2 }} р.</h3>
-			<h3 class="text c">Долг: {{ debt_total|floatformat:2 }} р.</h3><br>
+			<h3 class="text c">К оплате: {{ pay_sum.topay|floatformat:2 }} р.</h3>
+			<h3 class="text c">Оплачено: {{ pay_sum.payed|floatformat:2 }} р.</h3>
+			<h3 class="text c">Долг: {{ pay_sum.debt|floatformat:2 }} р.</h3><br>
 			<a href="{% url 'pay' ap.pk pay_selected %}" class="submenu_link">Детальный отчет</a>
 		</div>
 

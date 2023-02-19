@@ -3,7 +3,7 @@
 {% block content %}
 <div class="main">
     <div class="title">
-        <div>{{ title }}<a  href="{% url 'app' ap.id %}" class="links">{{ ap }}</a></div>
+        <div>{{ title }}<a  href="{% url 'app' ap.id %}" class="links">{{ ap }} {{ date|date:'F' }}</a></div>
         <div>{{ date }}</div>
     </div>
 
@@ -21,10 +21,10 @@
         {% if pay_list %}
             <thead>
             <tr>
-                <th class="c1"><h3>Расчет по виду оплаты</h3></th>
-                <th class="c1"><h3>К оплате</h3></th>
-                <th class="c1"><h3>Оплачено</h3></th>
-                <th class="c1"><h3>Долг/Переплата</h3></th>
+                <td class="c1"><h3>Расчет по виду оплаты</h3></td>
+                <td class="c1"><h3>К оплате</h3></td>
+                <td class="c1"><h3>Оплачено</h3></td>
+                <td class="c1"><h3>Долг/Переплата</h3></td>
             </tr>
             </thead>
         {% endif %}

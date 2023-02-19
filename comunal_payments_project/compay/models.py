@@ -157,38 +157,24 @@ class Pay(models.Model):
         return self.NAME + ' ' + str(self.item) + ' ' + str(self.get_month_display())
 
 
-# class Payed(models.Model):
-#     NAME = 'Оплачено'
-#
-#     value = models.FloatField(default=0, verbose_name=NAME)
-#     month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
-#     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-#     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
-#     item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
-#
-#     class Meta:
-#         verbose_name = 'Оплата'
-#         verbose_name_plural = 'Оплаты'
-#         ordering = ['created']
-#
-#     def __str__(self):
-#         return self.NAME + ' ' + str(self.item) + ' ' + str(self.month)
-#
-#
-# class Debts(models.Model):
-#     NAME = 'Долг'
-#
-#     value = models.FloatField(default=0, verbose_name=NAME)
-#     month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
-#     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-#     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
-#     item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
-#
-#     class Meta:
-#         verbose_name = 'Долг'
-#         verbose_name_plural = 'Долг'
-#         ordering = ['created']
-#
-#     def __str__(self):
-#         return self.NAME + ' ' + str(self.item) + ' ' + str(self.month)
+class PaySummary(models.Model):
+    NAME = 'Суммарный расчет'
 
+    topay = models.FloatField(default=0, verbose_name='К оплате')
+    payed = models.FloatField(default=0, verbose_name='Оплачено')
+    debt = models.FloatField(default=0, verbose_name='Долг по месяцу')
+    debt_summary = models.FloatField(default=0, verbose_name='Долг итоговый')
+    debt_sum_before = models.FloatField(default=0, verbose_name='Долг предыдущий')
+    month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
+    created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
+    comment = models.TextField(blank=True, verbose_name='Заметки')
+    app = models.ForeignKey('Appartment', on_delete=models.CASCADE, verbose_name="Имя объекта")
+
+    class Meta:
+        verbose_name = 'Суммарный расчет'
+        verbose_name_plural = 'Суммарный расчет'
+        ordering = ['created']
+
+    def __str__(self):
+        return self.NAME + ' ' + str(self.app) + ' ' + str(self.get_month_display())

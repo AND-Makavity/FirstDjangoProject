@@ -15,7 +15,7 @@
                 <h3><a href="{% url 'pay_history' item.app_id item.id %}" class="links">{{ item.get_item_name_display }}</a></h3>
             {% endfor %}
         </div>
-        <div>
+        <div class="info-box">
             <h3 class="obj">{{ obj }}</h3>
             {% for pay in pay_list %}
                 <h3 class="text c">{{ pay.item }}</h3>

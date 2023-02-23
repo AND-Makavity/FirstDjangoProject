@@ -5,7 +5,7 @@
 <div class="main">
 
 	<div class="title">
-		<div>{{ title }} {{ ap.name }}</div>
+		<div>{{ title }} <a href="{% url 'home' %}" class="links">{{ ap.name }}</a></div>
 		<div>{{ date }} <a href="{% url 'home' %}"><img class="icon_img" src="{% static 'compay/images/docs.png' %}" alt="No picture"></a></div>
 	</div>
 

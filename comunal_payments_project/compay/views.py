@@ -4,6 +4,7 @@ from django.contrib.auth.views import LoginView
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
+from django.contrib.auth.decorators import login_required
 
 from .forms import *
 
@@ -13,12 +14,14 @@ msgs = []
 date = datetime.date.today()
 month = date.month
 
-# DONE
+@login_required
 def index(request):
     global msgs, date, month
     clean_msgs('Calculation-Tarif')
     clean_msgs('Calculation-Counter')
     clean_msgs('config_item')
+    clean_msgs('Pay-Enter')
+
 
     if not request.user.is_authenticated:
         return redirect('login')
@@ -41,7 +44,7 @@ def index(request):
     return render(request, 'compay/index.html', context)
 
 
-# DONE
+@login_required
 def app(request, app_selected):
     global msgs, month, date
     clean_msgs('Pay-Enter')
@@ -98,7 +101,7 @@ def app(request, app_selected):
     return render(request, 'compay/app.html', context)
 
 
-# DONE
+@login_required
 def add_app(request):
     global msgs, date
     clean_msgs()
@@ -120,7 +123,7 @@ def add_app(request):
         return render(request, 'compay/add_app.html', context)
 
 
-# HERE !!!
+@login_required
 def item(request, app_selected, item_selected):
     global msgs, date
     clean_msgs()
@@ -147,6 +150,7 @@ def item(request, app_selected, item_selected):
     return render(request, 'compay/item.html', context)
 
 
+@login_required
 def pay_history(request, app_selected, item_selected=0):
     global msgs, date
     clean_msgs('Pay-Enter')
@@ -176,6 +180,7 @@ def pay_history(request, app_selected, item_selected=0):
     return render(request, 'compay/pay_history.html', context)
 
 
+@login_required
 def statistic(request, app_selected):
     global msgs, date
     clean_msgs('Pay-Enter')
@@ -193,7 +198,7 @@ def statistic(request, app_selected):
     return render(request, 'compay/statistic.html', context)
 
 
-# DONE
+@login_required
 def info(request, app_selected):
     global msgs, date
     clean_msgs()
@@ -222,7 +227,7 @@ def info(request, app_selected):
     return render(request, 'compay/info.html', context)
 
 
-# DONE
+@login_required
 def enter_info(request, app_selected, item_selected):
     global date
     clean_msgs()
@@ -255,7 +260,7 @@ def enter_info(request, app_selected, item_selected):
     return render(request, 'compay/enter_info.html', context)
 
 
-# DONE
+@login_required
 def config_app(request, app_selected):
     global msgs, date
     clean_msgs()
@@ -281,7 +286,7 @@ def config_app(request, app_selected):
         return render(request, 'compay/config_app.html', context)
 
 
-# DONE
+@login_required
 def enter_tarifs(request, app_selected):
     global msgs, date
     clean_msgs('config_item')
@@ -374,6 +379,7 @@ def enter_tarifs(request, app_selected):
     return render(request, 'compay/enter_tarifs.html', context)
 
 
+@login_required
 def tarifs(request, app_selected):
     global msgs, LST, date
     clean_msgs()
@@ -398,7 +404,7 @@ def tarifs(request, app_selected):
     return render(request, 'compay/tarifs.html', context)
 
 
-# DONE
+@login_required
 def tarif(request, app_selected, item_selected):
     global msgs, LST, date
     clean_msgs()
@@ -459,7 +465,7 @@ def tarif(request, app_selected, item_selected):
     return render(request, 'compay/tarif.html', context)
 
 
-# DONE
+@login_required
 def enter_counters(request, app_selected):
     global msgs, LST, month, date
     clean_msgs('config_item')
@@ -517,6 +523,7 @@ def enter_counters(request, app_selected):
     return render(request, 'compay/enter_counters.html', context)
 
 
+@login_required
 def counters(request, app_selected):
     global msgs, LST, date
     clean_msgs()
@@ -552,6 +559,7 @@ def counters(request, app_selected):
 
 
 # ПРОВЕРИТЬ month == month!
+@login_required
 def counter(request, app_selected, item_selected):
     global msgs, LST, month, date
     clean_msgs()
@@ -587,6 +595,7 @@ def counter(request, app_selected, item_selected):
     return render(request, 'compay/counter.html', context)
 
 
+@login_required
 def pay(request, app_selected, pay_selected=0):
     global msgs, LST, month, date
     clean_msgs()
@@ -631,9 +640,15 @@ def pay(request, app_selected, pay_selected=0):
         except:
             form = PayedForm()
 
+    total = dict(topay=0, payed=0, debt=0)
     if not pay_list:
         obj = 'Сейчас тут нет записей'
     else:
+        for pay in pay_list:
+            if not pay.item.is_counter == 'total':
+                total['topay'] += pay.topay
+                total['payed'] += pay.payed
+                total['debt'] += pay.debt
         if pay_selected == 0:
             msg_add(ap, 'Для ввода оплаты нажмите на наименование вида оплаты в таблице', 'Pay-Enter')
         else:
@@ -641,7 +656,7 @@ def pay(request, app_selected, pay_selected=0):
 
     context = {'title': 'Расчет для оплаты по: ', 'menu': menu, 'submenu': submenu, 'obj': obj, 'msgs': msgs,
                'ap': ap, 'app_selected': app_selected, 'pay_selected': pay_selected, 'pay_list': pay_list,
-               'date': date, 'form': form}
+               'total': total, 'date': date, 'form': form}
     return render(request, 'compay/pay.html', context)
 
 
@@ -765,9 +780,8 @@ def check_and_calculation(app_selected, month_selected):
                     else:
                         if ok:
                             if tarif.el_counter_discrete == '':
-                                sum = tarif.value * (counter.value - counter.previous)
-                                sum_str = '(' + str(counter.value) + ' - ' + str(counter.previous) + ') * ' + str(
-                                    tarif.value) + ' = ' + str(sum)
+                                sum = round(tarif.value * (counter.value - counter.previous), 2)
+                                sum_str = f'{counter.value - counter.previous} ед. / ({counter.value} - {counter.previous}) * {tarif.value} = {sum}'
                                 try:
                                     pay = Pay.objects.filter(item=item, month=month_selected).first()
                                     pay.topay = sum
@@ -792,18 +806,14 @@ def check_and_calculation(app_selected, month_selected):
                                 dif = counter.value - counter.previous
                                 if dif > 150:
                                     if dif > 600:
-                                        sum = 150 * t0_150 + 600 * t150_600 + (dif - 600) * t600
-                                        sum_str = '150 * ' + str(t0_150) + ' + 600 * ' * str(t150_600) + ' + (' + str(
-                                            counter.value) + ' - ' + str(counter.previous) + ' - 600) * ' + str(
-                                            t600) + ' = ' + str(sum)
+                                        sum = round((150 * t0_150 + 600 * t150_600 + (dif - 600) * t600),2)
+                                        sum_str = f'{counter.value - counter.previous} ед. / 150 * {t0_150} + 600 * {t150_600} + ({counter.value} - {counter.previous} - 600) * {t600} = {str(sum)}'
                                     else:
-                                        sum = 150 * t0_150 + (dif - 150) * t150_600
-                                        sum_str = '150 * ' + str(t0_150) + ' + (' + str(counter.value) + ' - ' + str(
-                                            counter.previous) + ' - 150) * ' + str(t150_600) + ' = ' + str(sum)
+                                        sum = round((150 * t0_150 + (dif - 150) * t150_600), 2)
+                                        sum_str = f'{counter.value - counter.previous} ед. / 150 * {str(t0_150)} + ({counter.value} - {counter.previous} - 150) * {t150_600} = {sum}'
                                 else:
-                                    sum = dif * t0_150
-                                    sum_str = '(' + str(counter.value) + ' - ' + str(counter.previous) + ') * ' + str(
-                                        t0_150) + ' = ' + str(sum)
+                                    sum = round(dif * t0_150, 2)
+                                    sum_str = f'{counter.value - counter.previous} ед. / ({counter.value} - {counter.previous}) * {t0_150} = {sum}'
                                 try:
                                     pay = Pay.objects.filter(item=item, month=month_selected).first()
                                     pay.topay = sum
@@ -822,9 +832,9 @@ def check_and_calculation(app_selected, month_selected):
                         try:
                             pay = Pay.objects.filter(item=item, month=month_selected).first()
                             pay.topay = tarif.value
-                            pay.calculation = 'тариф - ' + str(tarif.value)
+                            pay.calculation = f'тариф - {tarif.value}'
                         except:
-                            pay = Pay(topay=tarif.value, calculation=('тариф - ' + str(tarif.value)),
+                            pay = Pay(topay=tarif.value, calculation=f'тариф - {tarif.value}',
                                       month=month_selected, item=item)
                         pay.save()
                         summary += pay.topay
@@ -836,12 +846,12 @@ def check_and_calculation(app_selected, month_selected):
                     try:
                         pay = Pay.objects.filter(item=item, month=month_selected).first()
                         pay.topay = (topay_night + topay_day)
-                        pay.calculation = 'день-' + str(topay_day) + ' + ночь-' + str(topay_night) + ' = ' + str(
-                            topay_night + topay_day)
+                        pay.calculation = f'день: {topay_day} + ночь: {topay_night} = {topay_night + topay_day}'
                     except:
-                        pay = Pay(topay=(topay_night + topay_day), calculation=(
-                                'день-' + str(topay_day) + ' + ночь-' + str(topay_night) + ' = ' + str(
-                            topay_night + topay_day)), month=month_selected, item=item)
+                        pay = Pay(topay=(topay_night + topay_day),
+                                  calculation=f'день: {topay_day} + ночь: {topay_night} = {topay_night + topay_day}',
+                                  month=month_selected,
+                                  item=item)
                     pay.save()
     try:
         pay_selected = Pay.objects.filter(item=first, month=month_selected).first().pk
@@ -904,6 +914,11 @@ class RegisterUser(CreateView):
 class LoginUser(LoginView):
     form_class = AuthenticationForm
     template_name = 'compay/login.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(LoginUser, self).get_context_data(**kwargs)
+        context['title'] = 'Для использования приложения Вам необходимо авторизоваться'
+        return context
 
     def get_success_url(self):
         return reverse_lazy('home')

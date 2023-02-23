@@ -43,6 +43,14 @@ html, body {
     padding: 0px;
 }
 
+.menu_link_img {
+    padding: 5px 30px;
+}
+
+.menu_link_img:hover {
+    background-color: darkgrey;
+}
+
 .menu_link {
     color: white;
     text-decoration: none;
@@ -140,6 +148,11 @@ html, body {
 
 .c1 {
     border: 1px solid #e7e0e0;
+    vertical-align: middle;
+}
+
+.total {
+    background-color: lightgrey;
 }
 
 tbody {

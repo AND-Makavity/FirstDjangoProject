@@ -38,7 +38,7 @@ class InfoAdmin(admin.ModelAdmin):
 class PayAdmin(admin.ModelAdmin):
     list_display = ('id', 'item', 'topay', 'payed', 'debt', 'month', 'calculation', 'created', 'updated')
     list_display_links = ('id', 'item', )
-    search_fields = ('item',)
+    search_fields = ('item', 'id')
 
 
 class PaySummaryAdmin(admin.ModelAdmin):

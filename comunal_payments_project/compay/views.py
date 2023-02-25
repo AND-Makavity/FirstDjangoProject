@@ -1,3 +1,5 @@
+import calendar
+
 from django.contrib.auth import logout, login
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.views import LoginView
@@ -34,13 +36,23 @@ def index(request):
         form = MonthForm()
 
     apps = Appartment.objects.all()
+
     if apps.count() > 0:
         obj = ''
     else:
         obj = 'Пока тут нет объектов. Добавьте новый'
 
+    pay_sum_dict = {'Месяц': calendar.month_name[date.month], 'Насчитано': 0, 'Оплачено': 0, 'Долг': 0}
+    for ap in apps:
+        pay_sum = PaySummary.objects.filter(app=ap, month=date.month).first()
+        if pay_sum:
+            pay_sum_dict['Месяц'] = pay_sum.get_month_display
+            pay_sum_dict['Насчитано'] += round(pay_sum.topay, 1)
+            pay_sum_dict['Оплачено'] += round(pay_sum.payed, 1)
+            pay_sum_dict['Долг'] += round(pay_sum.debt, 1)
+
     context = {'title': 'Приложение для учета комунальных платежей', 'menu': menu, 'msgs': msgs, 'apps': apps,
-               'obj': obj, 'form': form, 'date': date}
+               'obj': obj, 'form': form, 'date': date, 'pay_sum_dict': pay_sum_dict}
     return render(request, 'compay/index.html', context)
 
 
@@ -612,7 +624,10 @@ def pay(request, app_selected, pay_selected=0):
         try:
             pay = Pay.objects.filter(item=it.pk, month=date.month).first()
             if pay:
-                pay.debt = round((pay.topay - pay.payed), 2)
+                if not pay.item.is_counter in ['day', 'night']:
+                    pay.debt = round((pay.topay - pay.payed), 2)
+                else:
+                    pay.debt = 0
                 pay.save()
                 pay_list.append(pay)
         except:
@@ -626,6 +641,8 @@ def pay(request, app_selected, pay_selected=0):
                 pay.payed = form.cleaned_data['payed']
                 pay.debt = round((pay.topay - pay.payed), 2)
                 pay.save()
+                pay_selected = 0
+                return redirect('pay', app_selected, pay_selected)
             except:
                 pass
         else:
@@ -645,10 +662,10 @@ def pay(request, app_selected, pay_selected=0):
         obj = 'Сейчас тут нет записей'
     else:
         for pay in pay_list:
-            if not pay.item.is_counter == 'total':
-                total['topay'] += pay.topay
-                total['payed'] += pay.payed
-                total['debt'] += pay.debt
+            if not pay.item.is_counter in ['day', 'night']:
+                total['topay'] += round(pay.topay, 2)
+                total['payed'] += round(pay.payed, 2)
+                total['debt'] += round(pay.debt, 2)
         if pay_selected == 0:
             msg_add(ap, 'Для ввода оплаты нажмите на наименование вида оплаты в таблице', 'Pay-Enter')
         else:
@@ -857,7 +874,7 @@ def check_and_calculation(app_selected, month_selected):
         pay_selected = Pay.objects.filter(item=first, month=month_selected).first().pk
     except:
         pay_selected = 0
-    return summary, pay_selected
+    return round(summary, 2), pay_selected
 
 
 def count_payed_and_debts(app_selected, month_selected):
@@ -875,7 +892,7 @@ def count_payed_and_debts(app_selected, month_selected):
                 payed_total += pay.payed
                 debts_total += pay.debt
 
-    return payed_total, debts_total
+    return round(payed_total, 2), round(debts_total, 2)
 
 
 def clean_msgs(msg_to_clean=None):
@@ -927,3 +944,5 @@ class LoginUser(LoginView):
 def logout_user(request):
     logout(request)
     return redirect('login')
+
+#adMin5881342

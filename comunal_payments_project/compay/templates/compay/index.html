@@ -26,6 +26,15 @@
 
             {% endfor %}
         </div>
+        <div>
+            <br>Суммарно по всем объектам: <br>
+            {% for key, value in pay_sum_dict.items %}
+
+                {{ key }} : {{ value }} <br>
+
+            {% endfor %}
+
+        </div>
     </div>
 </div>
 {% endblock %}

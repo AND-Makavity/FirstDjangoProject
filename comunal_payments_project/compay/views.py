@@ -89,7 +89,7 @@ def app(request, app_selected):
         pay_selected = 0
 
 
-    items = Item.objects.filter(app_id=app_selected)
+    items = Item.objects.filter(app_id=app_selected, active=True)
     ap = Appartment.objects.get(pk=app_selected)
 
     if not items:
@@ -314,7 +314,7 @@ def enter_tarifs(request, app_selected):
     for field, value in ap.__dict__.items():
         if field in LST:
             if value:
-                items = Item.objects.filter(app_id=app_selected, item_name=field)
+                items = Item.objects.filter(app_id=app_selected, item_name=field, active=True)
                 for it in items:
                     if it.is_counter in TYPES:
                         if it.item_name == 'electricity':
@@ -401,9 +401,9 @@ def tarifs(request, app_selected):
     submenu = []
 
     ap = Appartment.objects.get(pk=app_selected)
-    items = Item.objects.filter(app_id=app_selected)
+    items = Item.objects.filter(app_id=app_selected, active=True)
     for item in items:
-        tarifs = Tarif.objects.filter(item=item.pk).order_by('-created')[:1]
+        tarifs = Tarif.objects.filter(item=item.pk).order_by('-created')
 
         for tarif in tarifs:
             tarif_list.append(tarif)
@@ -492,7 +492,7 @@ def enter_counters(request, app_selected):
     for field, value in ap.__dict__.items():
         if field in LST:
             if value:
-                items = Item.objects.filter(app_id=app_selected).filter(item_name=field)
+                items = Item.objects.filter(app_id=app_selected, active=True).filter(item_name=field)
                 for it in items:
                     if it.is_counter in TYPES:
                         counter = Counter.objects.filter(item=it, type=it.is_counter).order_by('-created').first()
@@ -545,7 +545,7 @@ def counters(request, app_selected):
     submenu = []
 
     ap = Appartment.objects.get(pk=app_selected)
-    items = Item.objects.filter(app_id=app_selected)
+    items = Item.objects.filter(app_id=app_selected, active=True)
     for item in items:
         counters = Counter.objects.filter(item=item.pk).order_by('-created')[:2]
 
@@ -620,6 +620,14 @@ def pay(request, app_selected, pay_selected=0):
     ap = Appartment.objects.get(pk=app_selected)
     items = Item.objects.filter(app_id=app_selected)
 
+    # Новый блок кода! Список месяцев с расчетом оплат
+    monthes_list = []
+    for it in items:
+        pay = Pay.objects.filter(item=it.pk)
+        for one in pay:
+            if calendar.month_name[int(one.month)] not in monthes_list:
+                monthes_list.append(calendar.month_name[int(one.month)]) # Конец нового блока кода!
+
     for it in items:
         try:
             pay = Pay.objects.filter(item=it.pk, month=date.month).first()
@@ -673,10 +681,11 @@ def pay(request, app_selected, pay_selected=0):
 
     context = {'title': 'Расчет для оплаты по: ', 'menu': menu, 'submenu': submenu, 'obj': obj, 'msgs': msgs,
                'ap': ap, 'app_selected': app_selected, 'pay_selected': pay_selected, 'pay_list': pay_list,
-               'total': total, 'date': date, 'form': form}
+               'total': total, 'date': date, 'monthes_list': monthes_list, 'form': form}
     return render(request, 'compay/pay.html', context)
 
 
+# Новый блок кода проверки конфигурации
 def create_items_for_app(app_selected):
     global msgs
     clean_msgs()
@@ -730,7 +739,28 @@ def create_items_for_app(app_selected):
             exist = False
             for item in items:
                 if item.item_name == el:
-                    exist = True
+                    if el == 'electricity':     #Начало нового блока! Проверка конфигурации
+                        if item.is_counter in ['day', 'night', 'total'] and ap.el_night:
+                            exist = True
+                            if not item.active:
+                                item.active = True
+                                item.save()
+                        elif item.is_counter == ap.__dict__[conf[el]] and not ap.el_night:
+                            exist = True
+                            if not item.active:
+                                item.active = True
+                                item.save()
+                        else:
+                            item.active = False
+                            item.save()  # item.помеить_как_неактивный
+                    elif item.is_counter == ap.__dict__[conf[el]]:
+                        exist = True
+                        if not item.active:
+                            item.active = True
+                            item.save()
+                    else:
+                        item.active = False
+                        item.save()  # item.помеить_как_неактивный       #Конец нового блока! Проверка конфигурации
             if not exist:  # Добавляет отсутствующие предметы
                 a = Item(item_name=el, app_id=app_selected)
                 if el in conf.keys():
@@ -768,7 +798,7 @@ def check_and_calculation(app_selected, month_selected):
     lst = []
     summary = 0
     ap = Appartment.objects.get(id=app_selected)
-    items = Item.objects.filter(app=ap)
+    items = Item.objects.filter(app=ap, active=True)
     first = items.first()
 
     # Добавляем используемые для оплаты предметы в список для конкретного объекта:
@@ -883,7 +913,7 @@ def count_payed_and_debts(app_selected, month_selected):
     payed_total = 0
     debts_total = 0
     ap = Appartment.objects.get(id=app_selected)
-    items = Item.objects.filter(app=ap)
+    items = Item.objects.filter(app=ap, active=True)
 
     for it in items:
         if it.is_counter in lst_template:

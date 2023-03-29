@@ -28,6 +28,11 @@ class Appartment(models.Model):
         verbose_name_plural = 'Обьекты'
         ordering = ['name']
 
+    def __init__(self, *args, **kwargs):    # Новый блок кода! Инит с условием!
+        super(Appartment, self).__init__(*args, **kwargs)
+        if self.el_is_counter == 'tarif':
+            self.el_night = False   # Конец нового блока кода! Инит с условием!
+
     def __str__(self):
         return self.name
 
@@ -41,6 +46,7 @@ class Item(models.Model):
     item_name = models.CharField(choices=LST, max_length=50, blank=False, verbose_name="Предмет расчета")
     is_counter = models.CharField(choices=CT, max_length=50, default='tarif', blank=False, verbose_name="Расчет")
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    active = models.BooleanField(default=True, verbose_name="Активный")
     app = models.ForeignKey('Appartment', on_delete=models.CASCADE, verbose_name="Объект")
 
     class Meta:

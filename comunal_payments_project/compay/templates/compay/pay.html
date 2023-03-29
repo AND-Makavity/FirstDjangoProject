@@ -64,6 +64,11 @@
                 <td class="c1 total"><h3>{{ total.debt|floatformat:2 }}</h3></td>
             </tr>
         </table>
+        <div>
+            {% for month in monthes_list %}
+                <div class="info-box c1 total pr">{{ month }}</div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 {% endblock %}

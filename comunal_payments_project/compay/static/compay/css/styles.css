@@ -185,7 +185,7 @@ text-align: left;
 }
 
 .cell1 {
-    min-width: 550px;
+    min-width: 620px;
     padding-left: 30px;
     border: 1px solid #e7e0e0;
 }
@@ -244,6 +244,7 @@ text-align: left;
 
 .text {
     margin: 5px;
+    word-wrap: break-word;
 }
 
 .c {
@@ -254,4 +255,11 @@ text-align: left;
     color: grey;
     margin: 0px;
     padding-bottom: 12px;
+}
+
+.pr {
+    text-align: center;
+    vertical-align: middle;
+    padding: 10px;
+    border-radius: 8% 8%;
 }

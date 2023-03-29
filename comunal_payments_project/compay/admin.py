@@ -12,7 +12,7 @@ class AppartmentAdmin(admin.ModelAdmin):
 
 
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item_name', 'app', 'is_counter', 'created')
+    list_display = ('id', 'item_name', 'app', 'is_counter', 'created', 'active')
     list_display_links = ('id', 'item_name', )
     search_fields = ('item_name',)
 

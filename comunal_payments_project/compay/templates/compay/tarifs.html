@@ -20,7 +20,7 @@
         <table>
         {% for tarif in tarif_list %}
         <tr>
-            <td class="cell1"><h3 class="text"><a  href="{% url 'tarif' ap.id tarif.item_id %}" class="links">{{ tarif }}:</a></h3>
+            <td class="cell1"><h3 class="text"><a  href="{% url 'tarif' ap.id tarif.item_id %}" class="links">{{ tarif }} {{ tarif.get_el_counter_discrete_display }} :</a></h3>
             <h5 class="date">{{ tarif.created }}</h5></td>
             <td class="cell2"><h3>{{ tarif.value }}</h3></td>
         </tr>

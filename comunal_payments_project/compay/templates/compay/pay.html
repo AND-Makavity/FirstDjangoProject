@@ -31,37 +31,40 @@
         {% for pay in pay_list %}
             {% if pay.pk == pay_selected %}
             <tr>
-                <th class="c1"><h3 class="text с">{{ pay.item }}:</h3><h3 class="text date">{{ pay.calculation }} / {{ pay.updated }}</h3></th>
-                <td class="c1"><h3>{{ pay.topay|floatformat:2 }}</h3></td>
+                <th class="c1"><h3 class="text с">{{ pay.item }}:</h3><h4 class="text date">{{ pay.updated }}
+                    <br>{{ pay.calculation }}</h4></th>
+                <td class="c1"><h3>{{ pay.topay|floatformat:2 }} {{ pay.unit }}</h3></td>
                 <td class="c1">
                     <form action="{% url 'pay' ap.pk pay.pk %}" method="post">
                     {% csrf_token %}
                     {{ form.as_p }}
                     <button type="submit">Сохранить</button>
                     </form></td>
-                <td class="c1"><h3>{{ pay.debt|floatformat:2  }}</h3></td>
+                <td class="c1"><h3>{{ pay.debt|floatformat:2  }} {{ pay.unit }}</h3></td>
             </tr>
             {% elif pay.item.is_counter == 'day' or pay.item.is_counter == 'night' %}
             <tr>
-                <th class="c1"><h3 class="text с"><a class="links">{{ pay.item }}</a></h3><h3 class="text date">{{ pay.calculation }} / {{ pay.updated }}</h3></th>
-                <td class="c1"><h3>{{ pay.topay|floatformat:2 }}</h3></td>
-                <td class="c1"><h3>{{ pay.payed|floatformat:2 }}</h3></td>
-                <td class="c1"><h3>{{ pay.debt|floatformat:2 }}</h3></td>
+                <th class="c1"><h3 class="text с"><a class="links">{{ pay.item }}</a></h3><h4 class="text date">{{ pay.updated }}
+                    <br>{{ pay.calculation }}</h4></th>
+                <td class="c1"><h3>{{ pay.topay|floatformat:2 }} {{ pay.unit }}</h3></td>
+                <td class="c1"><h3>{{ pay.payed|floatformat:2 }} {{ pay.unit }}</h3></td>
+                <td class="c1"><h3>{{ pay.debt|floatformat:2 }} {{ pay.unit }}</h3></td>
             </tr>
             {% else %}
             <tr>
-                <th class="c1"><h3 class="text с"><a href="{% url 'pay' ap.pk pay.pk %}" class="links">{{ pay.item }}</a></h3><h3 class="text date">{{ pay.calculation }} / {{ pay.updated }}</h3></th>
-                <td class="c1"><h3>{{ pay.topay|floatformat:2 }}</h3></td>
-                <td class="c1"><h3>{{ pay.payed|floatformat:2 }}</h3></td>
-                <td class="c1"><h3>{{ pay.debt|floatformat:2 }}</h3></td>
+                <th class="c1"><h3 class="text с"><a href="{% url 'pay' ap.pk pay.pk %}" class="links">{{ pay.item }}</a></h3><h4 class="text date">{{ pay.updated }}
+                    <br>{{ pay.calculation }}</h4></th>
+                <td class="c1"><h3>{{ pay.topay|floatformat:2 }} {{ pay.unit }}</h3></td>
+                <td class="c1"><h3>{{ pay.payed|floatformat:2 }} {{ pay.unit }}</h3></td>
+                <td class="c1"><h3>{{ pay.debt|floatformat:2 }} {{ pay.unit }}</h3></td>
             </tr>
             {% endif %}
         {% endfor %}
             <tr>
                 <th class="c1 total"><h3 class="text с"><a class="links">ИТОГО:</a></h3></th>
-                <td class="c1 total"><h3>{{ total.topay|floatformat:2 }}</h3></td>
-                <td class="c1 total"><h3>{{ total.payed|floatformat:2 }}</h3></td>
-                <td class="c1 total"><h3>{{ total.debt|floatformat:2 }}</h3></td>
+                <td class="c1 total"><h3>{{ total.topay|floatformat:2 }} руб</h3></td>
+                <td class="c1 total"><h3>{{ total.payed|floatformat:2 }} руб</h3></td>
+                <td class="c1 total"><h3>{{ total.debt|floatformat:2 }} руб</h3></td>
             </tr>
         </table>
         <div>

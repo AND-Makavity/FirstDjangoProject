@@ -29,10 +29,10 @@
 			</a>
 
 			<h3 class="text c">Месяц: {{ date|date:'F' }} </h3>
-			<h3 class="text c">К оплате: {{ pay_sum.topay|floatformat:2 }} р.</h3>
-			<h3 class="text c">Оплачено: {{ pay_sum.payed|floatformat:2 }} р.</h3>
-			<h3 class="text c">Долг: {{ pay_sum.debt|floatformat:2 }} р.</h3><br>
-			<a href="{% url 'pay' ap.pk pay_selected %}" class="submenu_link">Детальный отчет</a>
+			<h3 class="text c">К оплате: {{ pay_sum.topay|floatformat:2 }} руб</h3>
+			<h3 class="text c">Оплачено: {{ pay_sum.payed|floatformat:2 }} руб</h3>
+			<h3 class="text c">Долг: {{ pay_sum.debt|floatformat:2 }} руб</h3><br>
+			<a href="{% url 'pay' ap.pk %}" class="submenu_link">Детальный отчет</a>
 		</div>
 
 

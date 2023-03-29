@@ -261,5 +261,6 @@ text-align: left;
     text-align: center;
     vertical-align: middle;
     padding: 10px;
-    border-radius: 8% 8%;
+    margin: 10px;
+    border-radius: 10px;
 }

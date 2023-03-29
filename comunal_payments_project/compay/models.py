@@ -64,16 +64,27 @@ class Item(models.Model):
 # type??? default=flat???
 class Tarif(models.Model):
     NAME = 'Тариф '
-    TYPE = [('counter', 'Счетчик'), ('day', 'День'), ('night', 'Ночь'), ('tarif', 'Тариф'),
-            ('discrete2', 'Тариф2'), ('discrete3', 'Тариф3')]
+    TYPE = [('counter', 'Счетчик'), ('day', 'День'), ('night', 'Ночь'), ('tarif', 'Тариф')]
     DISCR = [('0-150', '(0...150)'), ('150-600', '(150..600)'), ('600+', '(600 и выше)'), ('', '')]
-
+    TARIF_UNITS = [('руб', 'руб'), ('руб/м3', 'руб/м3'), ('руб/кВт', 'руб/кВт'), ('руб/тыс.м3', 'руб/тыс.м3')]
     value = models.FloatField(verbose_name='Тариф ', help_text='')
+    unit = models.CharField(choices=TARIF_UNITS, default='руб', max_length=15, blank=True, verbose_name="Ед.изм.")
     type = models.CharField(choices=TYPE, default='flat', max_length=15, blank=False, verbose_name="Тип тарифа")
     el_counter_discrete = models.CharField(choices=DISCR, default='', max_length=12,
                                            blank=False, verbose_name="Зависит от потребления")
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     item = models.ForeignKey('Item', on_delete=models.CASCADE, verbose_name="Предмет расчета")
+
+    def __init__(self, *args, **kwargs):
+        super(Tarif, self).__init__(*args, **kwargs)
+        if 'Вода' in str(self.item).split() and self.type in ['counter']:
+            self.unit = 'руб/м3'
+        elif 'Электричество' in str(self.item).split() and self.type in ['counter', 'day', 'night']:
+            self.unit = 'руб/кВт'
+        elif 'Газ' in str(self.item).split() and self.type in ['counter']:
+            self.unit = 'руб/тыс.м3'
+        else:
+            self.unit = 'руб'
 
     def __str__(self):
         return self.NAME + ' ' + str(self.item)
@@ -114,9 +125,11 @@ class Counter(models.Model):
     NAME = 'Показания счетчика'
     LST = [('electricity', 'Электричество'), ('water', 'Вода'), ('gas', 'Газ')]
     TYPE = [('counter', 'Однотарифный'), ('day', 'День'), ('night', 'Ночь')]
+    COUNTER_UNITS = [('ед.', 'ед.'), ('м3', 'м3'), ('тыс.м3', 'тыс.м3'), ('кВт', 'кВт')]
 
     type = models.CharField(choices=TYPE, default='flat', max_length=15, blank=False, verbose_name="Тип счетчика")
     value = models.PositiveIntegerField(blank=False, verbose_name='Показания')
+    unit = models.CharField(choices=COUNTER_UNITS, default='ед.', max_length=15, blank=True, verbose_name="Ед.изм.")
     previous = models.PositiveIntegerField(blank=True, default=0, verbose_name='Предыдущие показания')
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата ввода показаний")
     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
@@ -126,6 +139,15 @@ class Counter(models.Model):
         verbose_name = 'Показания счетчика'
         verbose_name_plural = 'Показания счетчиков'
         ordering = ['-created']
+
+    def __init__(self, *args, **kwargs):
+        super(Counter, self).__init__(*args, **kwargs)
+        if 'Вода' in str(self.item).split():
+            self.unit = 'м3'
+        elif 'Электричество' in str(self.item).split():
+            self.unit = 'кВт'
+        elif 'Газ' in str(self.item).split():
+            self.unit = 'тыс.м3'
 
     def __str__(self):
         return str(self.item)
@@ -144,10 +166,12 @@ MONTHES = [('1', 'Январь'), ('2', 'Февраль'), ('3', 'Март'),
 
 class Pay(models.Model):
     NAME = 'Расчет оплаты'
+    PAY_UNITS = [('руб', 'руб')]
 
     topay = models.FloatField(default=0, verbose_name='К оплате')
     payed = models.FloatField(default=0, verbose_name='Оплачено')
     debt = models.FloatField(default=0, verbose_name='Долг')
+    unit = models.CharField(choices=PAY_UNITS, default='руб', max_length=15, blank=True, verbose_name="Ед.изм.")
     month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
@@ -165,12 +189,14 @@ class Pay(models.Model):
 
 class PaySummary(models.Model):
     NAME = 'Суммарный расчет'
+    PAY_UNITS = [('руб', 'руб')]
 
     topay = models.FloatField(default=0, verbose_name='К оплате')
     payed = models.FloatField(default=0, verbose_name='Оплачено')
     debt = models.FloatField(default=0, verbose_name='Долг по месяцу')
     debt_summary = models.FloatField(default=0, verbose_name='Долг итоговый')
     debt_sum_before = models.FloatField(default=0, verbose_name='Долг предыдущий')
+    unit = models.CharField(choices=PAY_UNITS, default='руб', max_length=15, blank=True, verbose_name="Ед.изм.")
     month = models.CharField(max_length=2, choices=MONTHES, verbose_name='Месяц расчета')
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")

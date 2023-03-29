@@ -42,14 +42,17 @@ def index(request):
     else:
         obj = 'Пока тут нет объектов. Добавьте новый'
 
-    pay_sum_dict = {'Месяц': calendar.month_name[date.month], 'Насчитано': 0, 'Оплачено': 0, 'Долг': 0}
+    pay_sum_dict = {'Месяц': calendar.month_name[date.month], 'Начислено': 0, 'Оплачено': 0, 'Долг': 0}
     for ap in apps:
         pay_sum = PaySummary.objects.filter(app=ap, month=date.month).first()
         if pay_sum:
             pay_sum_dict['Месяц'] = pay_sum.get_month_display
-            pay_sum_dict['Насчитано'] += round(pay_sum.topay, 1)
+            pay_sum_dict['Начислено'] += round(pay_sum.topay, 1)
             pay_sum_dict['Оплачено'] += round(pay_sum.payed, 1)
             pay_sum_dict['Долг'] += round(pay_sum.debt, 1)
+    pay_sum_dict['Начислено'] = str(pay_sum_dict['Начислено'])+' руб'
+    pay_sum_dict['Оплачено'] = str(pay_sum_dict['Оплачено'])+' руб'
+    pay_sum_dict['Долг'] = str(pay_sum_dict['Долг'])+' руб'
 
     context = {'title': 'Приложение для учета комунальных платежей', 'menu': menu, 'msgs': msgs, 'apps': apps,
                'obj': obj, 'form': form, 'date': date, 'pay_sum_dict': pay_sum_dict}
@@ -828,7 +831,8 @@ def check_and_calculation(app_selected, month_selected):
                         if ok:
                             if tarif.el_counter_discrete == '':
                                 sum = round(tarif.value * (counter.value - counter.previous), 2)
-                                sum_str = f'{counter.value - counter.previous} ед. / ({counter.value} - {counter.previous}) * {tarif.value} = {sum}'
+                                sum_str = f'{counter.value - counter.previous} {counter.unit} / ({counter.value} - ' \
+                                          f'{counter.previous}){counter.unit} * {tarif.value}{tarif.unit} = {sum}руб'
                                 try:
                                     pay = Pay.objects.filter(item=item, month=month_selected).first()
                                     pay.topay = sum
@@ -854,13 +858,13 @@ def check_and_calculation(app_selected, month_selected):
                                 if dif > 150:
                                     if dif > 600:
                                         sum = round((150 * t0_150 + 600 * t150_600 + (dif - 600) * t600),2)
-                                        sum_str = f'{counter.value - counter.previous} ед. / 150 * {t0_150} + 600 * {t150_600} + ({counter.value} - {counter.previous} - 600) * {t600} = {str(sum)}'
+                                        sum_str = f'{counter.value - counter.previous} {counter.unit} / 150 * {t0_150} + 600 * {t150_600} + ({counter.value} - {counter.previous} - 600) * {t600} = {str(sum)}руб'
                                     else:
                                         sum = round((150 * t0_150 + (dif - 150) * t150_600), 2)
-                                        sum_str = f'{counter.value - counter.previous} ед. / 150 * {str(t0_150)} + ({counter.value} - {counter.previous} - 150) * {t150_600} = {sum}'
+                                        sum_str = f'{counter.value - counter.previous} {counter.unit} / 150 * {str(t0_150)} + ({counter.value} - {counter.previous} - 150) * {t150_600} = {sum}руб'
                                 else:
                                     sum = round(dif * t0_150, 2)
-                                    sum_str = f'{counter.value - counter.previous} ед. / ({counter.value} - {counter.previous}) * {t0_150} = {sum}'
+                                    sum_str = f'{counter.value - counter.previous} {counter.unit} / ({counter.value} - {counter.previous}) * {t0_150} = {sum}руб'
                                 try:
                                     pay = Pay.objects.filter(item=item, month=month_selected).first()
                                     pay.topay = sum
@@ -893,12 +897,12 @@ def check_and_calculation(app_selected, month_selected):
                     try:
                         pay = Pay.objects.filter(item=item, month=month_selected).first()
                         pay.topay = (topay_night + topay_day)
-                        pay.calculation = f'день: {topay_day} + ночь: {topay_night} = {topay_night + topay_day}'
+                        pay.calculation = f'день: {topay_day}{pay.unit} + ночь: {topay_night}{pay.unit} = ' \
+                                          f'{topay_night + topay_day}{pay.unit}'
                     except:
                         pay = Pay(topay=(topay_night + topay_day),
-                                  calculation=f'день: {topay_day} + ночь: {topay_night} = {topay_night + topay_day}',
-                                  month=month_selected,
-                                  item=item)
+                                  calculation=f'день: {topay_day}руб + ночь: {topay_night}руб = '
+                                              f'{topay_night + topay_day}руб', month=month_selected, item=item)
                     pay.save()
     try:
         pay_selected = Pay.objects.filter(item=first, month=month_selected).first().pk

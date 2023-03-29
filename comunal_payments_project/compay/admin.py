@@ -18,13 +18,13 @@ class ItemAdmin(admin.ModelAdmin):
 
 
 class CounterAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item', 'type', 'value', 'previous', 'created', 'updated')
+    list_display = ('id', 'item', 'type', 'value', 'unit', 'previous', 'created', 'updated')
     list_display_links = ('id', 'item', )
     search_fields = ('item',)
 
 
 class TarifAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item', 'type', 'value', 'el_counter_discrete', 'created')
+    list_display = ('id', 'item', 'type', 'value', 'unit', 'el_counter_discrete', 'created')
     list_display_links = ('id', 'item', )
     search_fields = ('item',)
 
@@ -36,13 +36,13 @@ class InfoAdmin(admin.ModelAdmin):
 
 
 class PayAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item', 'topay', 'payed', 'debt', 'month', 'calculation', 'created', 'updated')
+    list_display = ('id', 'item', 'topay', 'payed', 'debt', 'unit', 'month', 'calculation', 'created', 'updated')
     list_display_links = ('id', 'item', )
     search_fields = ('item', 'id')
 
 
 class PaySummaryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'app', 'topay', 'payed', 'debt', 'debt_summary', 'debt_sum_before', 'month',
+    list_display = ('id', 'app', 'topay', 'payed', 'debt', 'debt_summary', 'debt_sum_before', 'unit', 'month',
                     'comment', 'created', 'updated')
     list_display_links = ('id', 'app', )
     search_fields = ('item',)

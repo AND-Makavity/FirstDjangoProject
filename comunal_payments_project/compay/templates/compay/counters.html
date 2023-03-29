@@ -23,6 +23,7 @@
             <td class="cell1"><h3 class="text"><a  href="{% url 'counter' ap.id counter.item_id %}" class="links">{{ counter }}:</a></h3>
                 <h5 class="date">{{ counter.created }}</h5></td>
             <td class="cell2"><h3>{{ counter.value }}</h3></td>
+            <td class="cell2"><h3>{{ counter.unit }}</h3></td>
             </tr>
         {% endfor %}
         </table>

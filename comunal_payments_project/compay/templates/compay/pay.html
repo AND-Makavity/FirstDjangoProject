@@ -67,6 +67,11 @@
                 <td class="c1 total"><h3>{{ total.debt|floatformat:2 }} руб</h3></td>
             </tr>
         </table>
+        <div class="text m200">
+            {{ info }} <br>
+            {{ info.item_user_number }} <br>
+            {{ info.item_comment }}
+        </div>
         <div>
             {% for month in monthes_list %}
                 <div class="info-box c1 total pr">{{ month }}</div>

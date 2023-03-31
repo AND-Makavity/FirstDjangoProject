@@ -104,7 +104,7 @@ class Info(models.Model):
     LST = [('electricity', 'Электричество'), ('water', 'Вода'), ('gas', 'Газ'), ('kv', 'Квартплата'),
            ('tbo', 'ТБО'), ('domofon', 'Домофон'), ('inet', 'Интернет'), ('other', 'Другой вид оплаты')]
 
-    item = models.CharField(choices=LST, max_length=20, blank=False, verbose_name="Предмет")
+    item = models.ForeignKey('Item', on_delete=models.PROTECT, verbose_name="Предмет")
     item_provider = models.CharField(max_length=50, blank=True, verbose_name="Название организации")
     item_user_number = models.CharField(max_length=50, blank=True, verbose_name="Лицевой счет")
     item_comment = models.TextField(blank=True, verbose_name="Дополнительная информация")

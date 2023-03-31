@@ -264,3 +264,8 @@ text-align: left;
     margin: 10px;
     border-radius: 10px;
 }
+
+.m200 {
+    display: block;
+    max-width: 200px;
+}

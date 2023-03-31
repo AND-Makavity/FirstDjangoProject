@@ -16,6 +16,7 @@ msgs = []
 date = datetime.date.today()
 month = date.month
 
+
 @login_required
 def index(request):
     global msgs, date, month
@@ -23,7 +24,6 @@ def index(request):
     clean_msgs('Calculation-Counter')
     clean_msgs('config_item')
     clean_msgs('Pay-Enter')
-
 
     if not request.user.is_authenticated:
         return redirect('login')
@@ -50,9 +50,9 @@ def index(request):
             pay_sum_dict['Начислено'] += round(pay_sum.topay, 1)
             pay_sum_dict['Оплачено'] += round(pay_sum.payed, 1)
             pay_sum_dict['Долг'] += round(pay_sum.debt, 1)
-    pay_sum_dict['Начислено'] = str(pay_sum_dict['Начислено'])+' руб'
-    pay_sum_dict['Оплачено'] = str(pay_sum_dict['Оплачено'])+' руб'
-    pay_sum_dict['Долг'] = str(pay_sum_dict['Долг'])+' руб'
+    pay_sum_dict['Начислено'] = str(pay_sum_dict['Начислено']) + ' руб'
+    pay_sum_dict['Оплачено'] = str(pay_sum_dict['Оплачено']) + ' руб'
+    pay_sum_dict['Долг'] = str(pay_sum_dict['Долг']) + ' руб'
 
     context = {'title': 'Приложение для учета комунальных платежей', 'menu': menu, 'msgs': msgs, 'apps': apps,
                'obj': obj, 'form': form, 'date': date, 'pay_sum_dict': pay_sum_dict}
@@ -90,7 +90,6 @@ def app(request, app_selected):
             pay_selected = 0
     else:
         pay_selected = 0
-
 
     items = Item.objects.filter(app_id=app_selected, active=True)
     ap = Appartment.objects.get(pk=app_selected)
@@ -149,15 +148,17 @@ def item(request, app_selected, item_selected):
 
     if not counters:
         obj = 'Нет записей'
-        submenu = [{"title": "Ввести показания", 'url_name': 'counter'},
+    else:
+        obj = ''
+    if item.is_counter == 'tarif':
+        submenu = [{"title": "Изменить тариф", 'url_name': 'tarif'},
                    {"title": "Редактировать инфо", 'url_name': 'enter_info'}]
     elif item.is_counter in ['counter', 'day', 'night']:
-        obj = ''
+
         submenu = [{"title": "Ввести показания", 'url_name': 'counter'},
                    {"title": "Изменить тариф", 'url_name': 'tarif'},
                    {"title": "Редактировать инфо", 'url_name': 'enter_info'}]
     else:
-        obj = ''
         submenu = [{"title": "Редактировать инфо", 'url_name': 'enter_info'}]
 
     context = {'title': 'Показания для: ', 'menu': menu, 'msgs': msgs, 'item': item, 'obj': obj,
@@ -207,7 +208,6 @@ def statistic(request, app_selected):
     if not pay_sum:
         obj = 'Тут пока нет записей истории платежей'
 
-
     context = {'title': 'История платежей по: ', 'menu': menu, 'msgs': msgs, 'ap': ap, 'obj': obj,
                'app_selected': app_selected, 'pay_sum': pay_sum, 'date': date}
     return render(request, 'compay/statistic.html', context)
@@ -251,12 +251,12 @@ def enter_info(request, app_selected, item_selected):
     item = Item.objects.get(id=item_selected)
 
     try:
-        info = Info.objects.filter(item=item.item_name, app=ap)[0]
+        info = Info.objects.filter(item=item, app=ap)[0]
     except:
         info = None
 
     if not info:
-        info = Info(item=item.item_name, app=ap)
+        info = Info(item=item, app=ap)
 
     if request.method == 'POST':
         form = InfoForm(request.POST, instance=info)
@@ -430,6 +430,7 @@ def tarif(request, app_selected, item_selected):
 
     if not tarifs:
         obj = 'Пока тут нет записей'
+        tarif = None
     elif tarifs[0].el_counter_discrete != '':
         tarif3 = Tarif.create(item=tarifs[0].item, type=tarifs[0].type,
                               value=tarifs[0].value, el_counter_discrete=tarifs[0].el_counter_discrete)
@@ -463,16 +464,17 @@ def tarif(request, app_selected, item_selected):
             msgs.append(dict(key=str(item) + ' Error', text='Ошибка ввода данных!',
                              description='Error'))
     else:
-        form = TarifForm(instance=tarif, prefix=1)
-        form.label_suffix = tarif.get_el_counter_discrete_display()
-        form_list.append(form)
-        if tarif2:
-            form2 = TarifForm(instance=tarif2, prefix=2)
-            form2.label_suffix = tarif2.get_el_counter_discrete_display()
-            form_list.append(form2)
-            form3 = TarifForm(instance=tarif3, prefix=3)
-            form3.label_suffix = tarif3.get_el_counter_discrete_display()
-            form_list.append(form3)
+        if tarif:
+            form = TarifForm(instance=tarif, prefix=1)
+            form.label_suffix = tarif.get_el_counter_discrete_display()
+            form_list.append(form)
+            if tarif2:
+                form2 = TarifForm(instance=tarif2, prefix=2)
+                form2.label_suffix = tarif2.get_el_counter_discrete_display()
+                form_list.append(form2)
+                form3 = TarifForm(instance=tarif3, prefix=3)
+                form3.label_suffix = tarif3.get_el_counter_discrete_display()
+                form_list.append(form3)
 
     context = {'title': 'Тариф для: ', 'menu': menu, 'msgs': msgs, 'obj': obj,
                'item': item, 'app_selected': app_selected, 'item_selected': item_selected,
@@ -614,6 +616,7 @@ def counter(request, app_selected, item_selected):
 def pay(request, app_selected, pay_selected=0):
     global msgs, LST, month, date
     clean_msgs()
+    info = ''
     pay_list = []
     obj = ''
 
@@ -623,13 +626,20 @@ def pay(request, app_selected, pay_selected=0):
     ap = Appartment.objects.get(pk=app_selected)
     items = Item.objects.filter(app_id=app_selected)
 
+    if pay_selected:
+        pay = Pay.objects.get(pk=pay_selected)
+        try:
+            info = Info.objects.get(app=app_selected, item=pay.item.id)
+        except:
+            pass
+
     # Новый блок кода! Список месяцев с расчетом оплат
     monthes_list = []
     for it in items:
         pay = Pay.objects.filter(item=it.pk)
         for one in pay:
             if calendar.month_name[int(one.month)] not in monthes_list:
-                monthes_list.append(calendar.month_name[int(one.month)]) # Конец нового блока кода!
+                monthes_list.append(calendar.month_name[int(one.month)])  # Конец нового блока кода!
 
     for it in items:
         try:
@@ -684,7 +694,7 @@ def pay(request, app_selected, pay_selected=0):
 
     context = {'title': 'Расчет для оплаты по: ', 'menu': menu, 'submenu': submenu, 'obj': obj, 'msgs': msgs,
                'ap': ap, 'app_selected': app_selected, 'pay_selected': pay_selected, 'pay_list': pay_list,
-               'total': total, 'date': date, 'monthes_list': monthes_list, 'form': form}
+               'total': total, 'date': date, 'monthes_list': monthes_list, 'form': form, 'info': info}
     return render(request, 'compay/pay.html', context)
 
 
@@ -742,7 +752,7 @@ def create_items_for_app(app_selected):
             exist = False
             for item in items:
                 if item.item_name == el:
-                    if el == 'electricity':     #Начало нового блока! Проверка конфигурации
+                    if el == 'electricity':  # Начало нового блока! Проверка конфигурации
                         if item.is_counter in ['day', 'night', 'total'] and ap.el_night:
                             exist = True
                             if not item.active:
@@ -857,7 +867,7 @@ def check_and_calculation(app_selected, month_selected):
                                 dif = counter.value - counter.previous
                                 if dif > 150:
                                     if dif > 600:
-                                        sum = round((150 * t0_150 + 600 * t150_600 + (dif - 600) * t600),2)
+                                        sum = round((150 * t0_150 + 600 * t150_600 + (dif - 600) * t600), 2)
                                         sum_str = f'{counter.value - counter.previous} {counter.unit} / 150 * {t0_150} + 600 * {t150_600} + ({counter.value} - {counter.previous} - 600) * {t600} = {str(sum)}руб'
                                     else:
                                         sum = round((150 * t0_150 + (dif - 150) * t150_600), 2)
@@ -979,4 +989,4 @@ def logout_user(request):
     logout(request)
     return redirect('login')
 
-#adMin5881342
+# adMin5881342

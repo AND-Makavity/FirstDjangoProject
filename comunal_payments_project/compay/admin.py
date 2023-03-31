@@ -18,7 +18,7 @@ class ItemAdmin(admin.ModelAdmin):
 
 
 class CounterAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item', 'type', 'value', 'unit', 'previous', 'created', 'updated')
+    list_display = ('id', 'item', 'type', 'value', 'previous', 'unit', 'created', 'updated')
     list_display_links = ('id', 'item', )
     search_fields = ('item',)
 

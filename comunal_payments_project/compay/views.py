@@ -901,13 +901,15 @@ def check_and_calculation(app_selected, month_selected):
                                 if dif > 150:
                                     if dif > 600:
                                         sum = round((150 * t0_150 + 600 * t150_600 + (dif - 600) * t600), 2)
-                                        sum_str = f'{counter.value - counter.previous} {counter.unit} / 150 * {t0_150} + 600 * {t150_600} + ({counter.value} - {counter.previous} - 600) * {t600} = {str(sum)}руб'
+                                        sum_str = f'({counter.value} - {counter.previous}) / {counter.value - counter.previous} {counter.unit} / 150 * {t0_150}' \
+                                                  f' + 600 * {t150_600} + {counter.value - counter.previous - 600} * {t600} = {str(sum)}руб'
                                     else:
                                         sum = round((150 * t0_150 + (dif - 150) * t150_600), 2)
-                                        sum_str = f'{counter.value - counter.previous} {counter.unit} / 150 * {str(t0_150)} + ({counter.value} - {counter.previous} - 150) * {t150_600} = {sum}руб'
+                                        sum_str = f'({counter.value} - {counter.previous}) / {counter.value - counter.previous} {counter.unit} / 150 * {str(t0_150)}' \
+                                                  f' + {counter.value - counter.previous - 150} * {t150_600} = {str(sum)}руб'
                                 else:
                                     sum = round(dif * t0_150, 2)
-                                    sum_str = f'{counter.value - counter.previous} {counter.unit} / ({counter.value} - {counter.previous}) * {t0_150} = {sum}руб'
+                                    sum_str = f'({counter.value} - {counter.previous}) / {counter.value - counter.previous} {counter.unit} / {counter.value - counter.previous} * {t0_150} = {sum}руб'
                                 try:
                                     pay = Pay.objects.filter(item=item, month=month_selected).first()
                                     pay.topay = sum

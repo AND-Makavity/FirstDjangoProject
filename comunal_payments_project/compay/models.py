@@ -1,4 +1,6 @@
 from django.db import models
+from django.conf import settings
+from django.contrib.auth.models import User
 # from django.urls import reverse
 # from datetime import datetime
 
@@ -8,6 +10,7 @@ class Appartment(models.Model):
     CT = [('counter', 'Счетчик'), ('tarif', 'Тариф')]
     name = models.CharField(max_length=50, unique=True, blank=False, verbose_name="Название объекта")
     adress = models.CharField(max_length=100, blank=True, verbose_name="Адрес объекта")
+    belong = models.ForeignKey(settings.AUTH_USER_MODEL, default='admin', on_delete=models.CASCADE, verbose_name="Принадлежит")
     created = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     electricity = models.BooleanField(default=False, verbose_name="Электричество")
     el_is_counter = models.CharField(choices=CT, max_length=50, default='tarif', blank=False, verbose_name="Расчет по")
@@ -25,13 +28,14 @@ class Appartment(models.Model):
 
     class Meta:
         verbose_name = 'Объект'
-        verbose_name_plural = 'Обьекты'
+        verbose_name_plural = 'Объекты'
         ordering = ['name']
 
     def __init__(self, *args, **kwargs):    # Новый блок кода! Инит с условием!
         super(Appartment, self).__init__(*args, **kwargs)
         if self.el_is_counter == 'tarif':
-            self.el_night = False   # Конец нового блока кода! Инит с условием!
+            self.el_night = False
+            self.el_counter_discrete = False  # Конец нового блока кода! Инит с условием!
 
     def __str__(self):
         return self.name
@@ -50,8 +54,8 @@ class Item(models.Model):
     app = models.ForeignKey('Appartment', on_delete=models.CASCADE, verbose_name="Объект")
 
     class Meta:
-        verbose_name = 'Конфигурация для расчета'
-        verbose_name_plural = 'Конфигурации для расчета'
+        verbose_name = 'Конфигурация объекта'
+        verbose_name_plural = 'Конфигурации объектов'
         ordering = ['id']
 
     def __str__(self):
@@ -90,8 +94,8 @@ class Tarif(models.Model):
         return self.NAME + ' ' + str(self.item)
 
     class Meta:
-        verbose_name = 'Тариф для расчета'
-        verbose_name_plural = 'Тарифы для расчета'
+        verbose_name = 'Тариф'
+        verbose_name_plural = 'Тарифы'
         ordering = ['-created']
 
     @classmethod
@@ -148,6 +152,8 @@ class Counter(models.Model):
             self.unit = 'кВт'
         elif 'Газ' in str(self.item).split():
             self.unit = 'тыс.м3'
+        if self.value < self.previous:
+            self.value = self.previous
 
     def __str__(self):
         return str(self.item)

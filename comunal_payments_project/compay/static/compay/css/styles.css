@@ -3,6 +3,10 @@ html, body {
     margin: 0;
 }
 
+h3 {
+    color: #615959;
+}
+
 .content {
     padding: 25px;
 }
@@ -60,6 +64,13 @@ html, body {
 
 .menu_link:hover {
     background-color: darkgrey;
+}
+
+.but {
+    background-color: grey;
+    border-width: 0;
+    font-size: 18px;
+    cursor: pointer;
 }
 
 .submenu {
@@ -161,7 +172,8 @@ tbody {
 
 .info-box {
     display: block;
-    min-width: 300px;
+    min-width: 350px;
+    max-width: 350px;
     padding-right: 30px;
 }
 
@@ -265,7 +277,6 @@ text-align: left;
     border-radius: 10px;
 }
 
-.m200 {
-    display: block;
-    max-width: 200px;
+.td {
+    text-decoration: none;
 }

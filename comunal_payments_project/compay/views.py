@@ -6,6 +6,7 @@ from django.contrib.auth.views import LoginView
 from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 
 from .forms import *
@@ -15,6 +16,8 @@ LST = ['electricity', 'water', 'gas']
 msgs = []
 date = datetime.date.today()
 month = date.month
+MONTHES = {'1': 'Январь', '2': 'Февраль', '3': 'Март', '4': 'Апрель', '5': 'Май', '6': 'Июнь', '7': 'Июль',
+           '8': 'Август', '9': 'Сентябрь', '10': 'Октябрь', '11': 'Ноябрь', '12': 'Декабрь'}
 
 
 @login_required
@@ -24,25 +27,32 @@ def index(request):
     clean_msgs('Calculation-Counter')
     clean_msgs('config_item')
     clean_msgs('Pay-Enter')
+    admin = False
+    form = None
 
     if not request.user.is_authenticated:
         return redirect('login')
 
-    if request.method == "POST":
-        form = MonthForm(request.POST)
-        if form.is_valid():
-            date = form.cleaned_data['date']
+    if request.user.username == 'admin':
+        apps = Appartment.objects.all()
+        admin = True
     else:
-        form = MonthForm()
+        apps = Appartment.objects.filter(belong=request.user)
 
-    apps = Appartment.objects.all()
+    if admin:
+        if request.method == "POST":
+            form = MonthForm(request.POST)
+            if form.is_valid():
+                date = form.cleaned_data['date']
+        else:
+            form = MonthForm()
 
     if apps.count() > 0:
         obj = ''
     else:
         obj = 'Пока тут нет объектов. Добавьте новый'
 
-    pay_sum_dict = {'Месяц': calendar.month_name[date.month], 'Начислено': 0, 'Оплачено': 0, 'Долг': 0}
+    pay_sum_dict = {'Месяц': MONTHES[str(date.month)], 'Начислено': 0, 'Оплачено': 0, 'Долг': 0}
     for ap in apps:
         pay_sum = PaySummary.objects.filter(app=ap, month=date.month).first()
         if pay_sum:
@@ -55,7 +65,7 @@ def index(request):
     pay_sum_dict['Долг'] = str(pay_sum_dict['Долг']) + ' руб'
 
     context = {'title': 'Приложение для учета комунальных платежей', 'menu': menu, 'msgs': msgs, 'apps': apps,
-               'obj': obj, 'form': form, 'date': date, 'pay_sum_dict': pay_sum_dict}
+               'obj': obj, 'form': form, 'date': date, 'pay_sum_dict': pay_sum_dict, 'admin': admin}
     return render(request, 'compay/index.html', context)
 
 
@@ -123,7 +133,9 @@ def add_app(request):
     if request.method == 'POST':
         form = AppartmentForm(request.POST)
         if form.is_valid():
-            a = form.save()
+            a = form.save(commit=False)
+            a.belong = request.user
+            a.save()
             create_items_for_app(app_selected=a.pk)  # Создаются предметы оплаты по конфигурции объекта
             return redirect('home')
         else:
@@ -613,7 +625,7 @@ def counter(request, app_selected, item_selected):
 
 
 @login_required
-def pay(request, app_selected, pay_selected=0):
+def pay(request, app_selected, datemonth=date.month, pay_selected=0):
     global msgs, LST, month, date
     clean_msgs()
     info = ''
@@ -624,9 +636,9 @@ def pay(request, app_selected, pay_selected=0):
                {"title": "Итоговый отчет", 'url_name': 'statistic', 'app_selected': app_selected}]
 
     ap = Appartment.objects.get(pk=app_selected)
-    items = Item.objects.filter(app_id=app_selected)
+    items = Item.objects.filter(app_id=app_selected, active=True)
 
-    if pay_selected:
+    if pay_selected: # Если выбран предмет для оплаты, то показываем инфо для оплаты
         pay = Pay.objects.get(pk=pay_selected)
         try:
             info = Info.objects.get(app=app_selected, item=pay.item.id)
@@ -634,16 +646,26 @@ def pay(request, app_selected, pay_selected=0):
             pass
 
     # Новый блок кода! Список месяцев с расчетом оплат
+    todaymonth = {}
+    todaymonth['month'] = date.month
+    todaymonth['month_name'] = MONTHES[str(datemonth)]
+
     monthes_list = []
+    ones_list = []
     for it in items:
         pay = Pay.objects.filter(item=it.pk)
         for one in pay:
-            if calendar.month_name[int(one.month)] not in monthes_list:
-                monthes_list.append(calendar.month_name[int(one.month)])  # Конец нового блока кода!
+            # if calendar.month_name[int(one.month)] not in monthes_list:
+            #     monthes_list.append(calendar.month_name[int(one.month)])
+            if one.month not in monthes_list:
+                if str(one.month) != str(date.month):
+                    monthes_list.append(one.month)
+                    ones_list.append(one)
+    # Конец нового блока кода!
 
     for it in items:
         try:
-            pay = Pay.objects.filter(item=it.pk, month=date.month).first()
+            pay = Pay.objects.filter(item=it.pk, month=datemonth).first() # here datemonth
             if pay:
                 if not pay.item.is_counter in ['day', 'night']:
                     pay.debt = round((pay.topay - pay.payed), 2)
@@ -663,7 +685,7 @@ def pay(request, app_selected, pay_selected=0):
                 pay.debt = round((pay.topay - pay.payed), 2)
                 pay.save()
                 pay_selected = 0
-                return redirect('pay', app_selected, pay_selected)
+                return redirect('pay', app_selected, datemonth, pay_selected)
             except:
                 pass
         else:
@@ -678,7 +700,7 @@ def pay(request, app_selected, pay_selected=0):
         except:
             form = PayedForm()
 
-    total = dict(topay=0, payed=0, debt=0)
+    total = dict(topay=0, payed=0, debt=0, month=MONTHES[str(datemonth)])
     if not pay_list:
         obj = 'Сейчас тут нет записей'
     else:
@@ -687,6 +709,7 @@ def pay(request, app_selected, pay_selected=0):
                 total['topay'] += round(pay.topay, 2)
                 total['payed'] += round(pay.payed, 2)
                 total['debt'] += round(pay.debt, 2)
+                total['month'] = pay.get_month_display
         if pay_selected == 0:
             msg_add(ap, 'Для ввода оплаты нажмите на наименование вида оплаты в таблице', 'Pay-Enter')
         else:
@@ -694,7 +717,8 @@ def pay(request, app_selected, pay_selected=0):
 
     context = {'title': 'Расчет для оплаты по: ', 'menu': menu, 'submenu': submenu, 'obj': obj, 'msgs': msgs,
                'ap': ap, 'app_selected': app_selected, 'pay_selected': pay_selected, 'pay_list': pay_list,
-               'total': total, 'date': date, 'monthes_list': monthes_list, 'form': form, 'info': info}
+               'total': total, 'date': date, 'monthes_list': ones_list, 'form': form, 'info': info,
+               'datemonth': datemonth, 'todaymonth': todaymonth}
     return render(request, 'compay/pay.html', context)
 
 
@@ -765,15 +789,24 @@ def create_items_for_app(app_selected):
                                 item.save()
                         else:
                             item.active = False
-                            item.save()  # item.помеить_как_неактивный
-                    elif item.is_counter == ap.__dict__[conf[el]]:
+                            item.save()  # item.пометить_как_неактивный
+                    elif el in ['water', 'gas']:
+                        if item.is_counter == ap.__dict__[conf[el]]:
+                            exist = True
+                            if not item.active:
+                                item.active = True
+                                item.save()
+                        else:
+                            item.active = False
+                            item.save()  # item.пометить_как_неактивный       #Конец нового блока! Проверка конфигурации
+                    else:
                         exist = True
                         if not item.active:
                             item.active = True
                             item.save()
-                    else:
-                        item.active = False
-                        item.save()  # item.помеить_как_неактивный       #Конец нового блока! Проверка конфигурации
+                if item.item_name not in lst:
+                    item.active = False
+                    item.save()
             if not exist:  # Добавляет отсутствующие предметы
                 a = Item(item_name=el, app_id=app_selected)
                 if el in conf.keys():
@@ -971,6 +1004,11 @@ class RegisterUser(CreateView):
         login(self.request, user)
         return redirect('home')
 
+    def get_context_data(self, **kwargs):
+        context = super(RegisterUser, self).get_context_data(**kwargs)
+        context['title'] = 'Для использования приложения Вам необходимо зарегистрироваться'
+        return context
+
 
 class LoginUser(LoginView):
     form_class = AuthenticationForm
@@ -986,7 +1024,8 @@ class LoginUser(LoginView):
 
 
 def logout_user(request):
-    logout(request)
-    return redirect('login')
+    if request.method == 'POST':  # Должен быть ПОСТ запрос для стабильности
+        logout(request)
+        return redirect('login')
 
 # adMin5881342

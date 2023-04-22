@@ -3,7 +3,7 @@
 {% block content %}
 <div class="main">
     <div class="title">
-        <div>{{ title }}<a  href="{% url 'app' ap.id %}" class="links">{{ ap }} {{ date|date:'F' }}</a></div>
+        <div>{{ title }}<a  href="{% url 'app' ap.id %}" class="links">{{ ap }}</a></div>
         <div>{{ date }}</div>
     </div>
 
@@ -22,6 +22,7 @@
             <thead>
             <tr>
                 <td class="c1 total"><h3>Расчет по виду оплаты</h3></td>
+                <td class="c1 total"><h3>Месяц</h3></td>
                 <td class="c1 total"><h3>К оплате</h3></td>
                 <td class="c1 total"><h3>Оплачено</h3></td>
                 <td class="c1 total"><h3>Долг/Переплата</h3></td>
@@ -33,9 +34,10 @@
             <tr>
                 <th class="c1"><h3 class="text с">{{ pay.item }}:</h3><h4 class="text date">{{ pay.updated }}
                     <br>{{ pay.calculation }}</h4></th>
+                <td class="c1"><h3>{{ pay.get_month_display }}</h3></td>
                 <td class="c1"><h3>{{ pay.topay|floatformat:2 }} {{ pay.unit }}</h3></td>
                 <td class="c1">
-                    <form action="{% url 'pay' ap.pk pay.pk %}" method="post">
+                    <form action="{% url 'pay' ap.pk datemonth pay.pk %}" method="post">
                     {% csrf_token %}
                     {{ form.as_p }}
                     <button type="submit">Сохранить</button>
@@ -46,14 +48,16 @@
             <tr>
                 <th class="c1"><h3 class="text с"><a class="links">{{ pay.item }}</a></h3><h4 class="text date">{{ pay.updated }}
                     <br>{{ pay.calculation }}</h4></th>
+                <td class="c1"><h3>{{ pay.get_month_display }}</h3></td>
                 <td class="c1"><h3>{{ pay.topay|floatformat:2 }} {{ pay.unit }}</h3></td>
                 <td class="c1"><h3>{{ pay.payed|floatformat:2 }} {{ pay.unit }}</h3></td>
                 <td class="c1"><h3>{{ pay.debt|floatformat:2 }} {{ pay.unit }}</h3></td>
             </tr>
             {% else %}
             <tr>
-                <th class="c1"><h3 class="text с"><a href="{% url 'pay' ap.pk pay.pk %}" class="links">{{ pay.item }}</a></h3><h4 class="text date">{{ pay.updated }}
+                <th class="c1"><h3 class="text с"><a href="{% url 'pay' ap.pk datemonth pay.pk %}" class="links">{{ pay.item }}</a></h3><h4 class="text date">{{ pay.updated }}
                     <br>{{ pay.calculation }}</h4></th>
+                <td class="c1"><h3>{{ pay.get_month_display }}</h3></td>
                 <td class="c1"><h3>{{ pay.topay|floatformat:2 }} {{ pay.unit }}</h3></td>
                 <td class="c1"><h3>{{ pay.payed|floatformat:2 }} {{ pay.unit }}</h3></td>
                 <td class="c1"><h3>{{ pay.debt|floatformat:2 }} {{ pay.unit }}</h3></td>
@@ -62,19 +66,23 @@
         {% endfor %}
             <tr>
                 <th class="c1 total"><h3 class="text с"><a class="links">ИТОГО:</a></h3></th>
+                <td class="c1 total"><h3>{{ total.month }}</h3></td>
                 <td class="c1 total"><h3>{{ total.topay|floatformat:2 }} руб</h3></td>
                 <td class="c1 total"><h3>{{ total.payed|floatformat:2 }} руб</h3></td>
                 <td class="c1 total"><h3>{{ total.debt|floatformat:2 }} руб</h3></td>
             </tr>
         </table>
-        <div class="text m200">
-            {{ info }} <br>
-            {{ info.item_user_number }} <br>
-            {{ info.item_comment }}
-        </div>
+
         <div>
+            <div class="text info-box">
+                {{ info }} <br>
+                {{ info.item_user_number }} <br>
+                {{ info.item_comment }}
+            </div>
+            <br>
+            <a href="{% url 'pay' app_selected todaymonth.month %}" class="td"><div class="info-box c1 total pr submenu_link">Текущий месяц</div></a>
             {% for month in monthes_list %}
-                <div class="info-box c1 total pr">{{ month }}</div>
+            <a href="{% url 'pay' app_selected month.month %}" class="td"><div class="info-box c1 total pr submenu_link">{{ month.get_month_display }}</div></a>
             {% endfor %}
         </div>
     </div>

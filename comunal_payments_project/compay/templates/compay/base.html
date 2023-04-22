@@ -15,11 +15,16 @@
 		{% if request.user.is_authenticated %}
 			<a href="{% url 'home' %}" class="menu_link">{{ user.username }}</a>
 			<a href="{% url 'home' %}" class="menu_link_img"><img src="{% static 'compay/images/dom.png' %}" alt="Logo"></a>
-			<a href="{% url 'logout' %}" class="menu_link">Выйти</a>
+			<form action="{% url 'logout_user' %}" method="POST">
+				{% csrf_token %}
+				<button type="submit" class="menu_link but">Выйти</button>
+			</form>
 		{% else %}
-			<p><br></p>
-			<!-- <a href="{% url 'register' %}" class="menu_link">Регистрация</a>
-			<a href="{% url 'login' %}" class="menu_link">Войти</a> -->
+			<a href="{% url 'login' %}" class="menu_link">Войти</a>
+			<div><img src="{% static 'compay/images/dom.png' %}" alt="Logo"></div>
+			<a href="{% url 'register' %}" class="menu_link">Регистрация</a>
+
+
 		{% endif %}
 		</div>
 {% endblock mainmenu %}

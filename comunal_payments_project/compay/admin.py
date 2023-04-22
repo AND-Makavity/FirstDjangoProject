@@ -4,7 +4,7 @@ from .models import *
 
 
 class AppartmentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'adress', 'created', 'electricity', 'el_is_counter',
+    list_display = ('id', 'name', 'adress', 'belong', 'created', 'electricity', 'el_is_counter',
                     'el_counter_discrete', 'el_night', 'water', 'wat_is_counter',
                     'gas', 'gas_is_counter', 'kv', 'tbo', 'domofon', 'inet', 'other')
     list_display_links = ('id', 'name', )
